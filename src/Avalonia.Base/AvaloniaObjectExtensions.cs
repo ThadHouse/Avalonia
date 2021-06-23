@@ -183,7 +183,7 @@ namespace Avalonia
             }
             else
             {
-                var source = ObservableEx.SingleValue(o);
+                var source = ObservableEx.SingleValue(value);
                 return o.Bind(property, source, priority);
             }
         }
