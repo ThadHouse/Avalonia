@@ -1,5 +1,4 @@
 using System;
-
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
@@ -266,7 +265,6 @@ namespace Avalonia.Controls.Presenters
                 {
                     VisualChildren.Remove(oldChild);
                     logicalChildren.Remove(oldChild);
-                    ((ISetInheritanceParent)oldChild).SetParent(oldChild.Parent);
                 }
             }
 
@@ -287,7 +285,6 @@ namespace Avalonia.Controls.Presenters
             }
             else if (newChild != oldChild)
             {
-                ((ISetInheritanceParent)newChild).SetParent(this);
                 Child = newChild;
 
                 if (!logicalChildren.Contains(newChild))
@@ -448,7 +445,6 @@ namespace Avalonia.Controls.Presenters
             {
                 VisualChildren.Remove(Child);
                 LogicalChildren.Remove(Child);
-                ((ISetInheritanceParent)Child).SetParent(Child.Parent);
                 Child = null;
                 _recyclingDataTemplate = null;
             }

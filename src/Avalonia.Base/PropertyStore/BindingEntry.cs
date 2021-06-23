@@ -1,157 +1,208 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reactive.Disposables;
 using Avalonia.Data;
-using Avalonia.Threading;
+using Avalonia.Utilities;
 
 #nullable enable
 
 namespace Avalonia.PropertyStore
 {
-    /// <summary>
-    /// Represents an untyped interface to <see cref="BindingEntry{T}"/>.
-    /// </summary>
-    internal interface IBindingEntry : IBatchUpdate, IPriorityValueEntry, IDisposable
+    internal interface IBindingEntry : IValueEntry, IValueFrame, IDisposable
     {
-        void Start(bool ignoreBatchUpdate);
     }
 
-    /// <summary>
-    /// Stores a binding in a <see cref="ValueStore"/> or <see cref="PriorityValue{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">The property type.</typeparam>
-    internal class BindingEntry<T> : IBindingEntry, IPriorityValueEntry<T>, IObserver<BindingValue<T>>
+    internal class BindingEntry<T> : IValueEntry<T>,
+        IBindingEntry,
+        IValueFrame, 
+        IObserver<BindingValue<T>>,
+        IObserver<object?>,
+        IList<IValueEntry>,
+        IDisposable
     {
-        private readonly IAvaloniaObject _owner;
-        private IValueSink _sink;
-        private IDisposable? _subscription;
-        private bool _isSubscribed;
-        private bool _batchUpdate;
-        private Optional<T> _value;
+        private readonly object _source;
+        private IDisposable? _bindingSubscription;
+        private ValueStore? _owner;
+        private TypedObserverShim? _shim;
+        private bool _hasValue;
+        private T? _value;
 
         public BindingEntry(
-            IAvaloniaObject owner,
             StyledPropertyBase<T> property,
             IObservable<BindingValue<T>> source,
-            BindingPriority priority,
-            IValueSink sink)
+            BindingPriority priority)
         {
-            _owner = owner;
+            _source = source;
             Property = property;
-            Source = source;
             Priority = priority;
-            _sink = sink;
         }
 
+        public BindingEntry(
+            StyledPropertyBase<T> property,
+            IObservable<T?> source,
+            BindingPriority priority)
+        {
+            _source = source;
+            Property = property;
+            Priority = priority;
+        }
+
+        public BindingEntry(
+            StyledPropertyBase<T> property,
+            IObservable<object?> source,
+            BindingPriority priority)
+        {
+            _source = source;
+            Property = property;
+            Priority = priority;
+        }
+
+        public bool HasValue
+        {
+            get
+            {
+                StartIfNecessary();
+                return _hasValue;
+            }
+        }
+        
+        public bool IsActive => true;
+        public BindingPriority Priority { get; }
         public StyledPropertyBase<T> Property { get; }
-        public BindingPriority Priority { get; private set; }
-        public IObservable<BindingValue<T>> Source { get; }
-        Optional<object> IValue.GetValue() => _value.ToObject();
-
-        public void BeginBatchUpdate() => _batchUpdate = true;
-
-        public void EndBatchUpdate()
-        {
-            _batchUpdate = false;
-
-            if (_sink is ValueStore)
-                Start();
-        }
-
-        public Optional<T> GetValue(BindingPriority maxPriority)
-        {
-            return Priority >= maxPriority ? _value : Optional<T>.Empty;
+        AvaloniaProperty IValueEntry.Property => Property;
+        public IList<IValueEntry> Values => this;
+        int ICollection<IValueEntry>.Count => 1;
+        bool ICollection<IValueEntry>.IsReadOnly => true;
+        
+        IValueEntry IList<IValueEntry>.this[int index] 
+        { 
+            get => this;
+            set => throw new NotImplementedException(); 
         }
 
         public void Dispose()
         {
-            _subscription?.Dispose();
-            _subscription = null;
-            OnCompleted();
+            _bindingSubscription?.Dispose();
+            BindingCompleted();
         }
 
-        public void OnCompleted()
+        public void SetOwner(ValueStore? owner) => _owner = owner;
+
+        public bool TryGetValue(out T? value)
         {
-            var oldValue = _value;
-            _value = default;
-            Priority = BindingPriority.Unset;
-            _isSubscribed = false;
-            _sink.Completed(Property, this, oldValue);
+            StartIfNecessary();
+            value = _value;
+            return _hasValue;
         }
 
-        public void OnError(Exception error)
+        public bool TryGetValue(out object? value)
         {
-            throw new NotImplementedException("BindingEntry.OnError is not implemented", error);
+            StartIfNecessary();
+            value = _value;
+            return _hasValue;
         }
 
-        public void OnNext(BindingValue<T> value)
+        public void OnCompleted() => BindingCompleted();
+        public void OnError(Exception error) => BindingCompleted();
+        void IObserver<object?>.OnNext(object? value) => SetValue(value);
+
+        int IList<IValueEntry>.IndexOf(IValueEntry item) => throw new NotImplementedException();
+        void IList<IValueEntry>.Insert(int index, IValueEntry item) => throw new NotImplementedException();
+        void IList<IValueEntry>.RemoveAt(int index) => throw new NotImplementedException();
+        void ICollection<IValueEntry>.Add(IValueEntry item) => throw new NotImplementedException();
+        void ICollection<IValueEntry>.Clear() => throw new NotImplementedException();
+        bool ICollection<IValueEntry>.Contains(IValueEntry item) => throw new NotImplementedException();
+        void ICollection<IValueEntry>.CopyTo(IValueEntry[] array, int arrayIndex) => throw new NotImplementedException();
+        bool ICollection<IValueEntry>.Remove(IValueEntry item) => throw new NotImplementedException();
+        IEnumerator<IValueEntry> IEnumerable<IValueEntry>.GetEnumerator() => throw new NotImplementedException();
+        IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+
+        void IObserver<BindingValue<T>>.OnNext(BindingValue<T> value)
         {
-            if (Dispatcher.UIThread.CheckAccess())
-            {
-                UpdateValue(value); 
-            }
+            if (value.HasValue)
+                SetValue(value.Value);
             else
-            {
-                // To avoid allocating closure in the outer scope we need to capture variables
-                // locally. This allows us to skip most of the allocations when on UI thread.
-                var instance = this;
-                var newValue = value;
+                ClearValue();
+        }
 
-                Dispatcher.UIThread.Post(() => instance.UpdateValue(newValue));
+        private void ClearValue()
+        {
+            _ = _owner ?? throw new AvaloniaInternalException("BindingEntry has no owner.");
+
+            var oldValue = _hasValue ? new Optional<T>(_value) : default;
+
+            if (_bindingSubscription is null)
+                _owner.RemoveBindingEntry(this, oldValue);
+            else if (_hasValue)
+            {
+                _hasValue = false;
+                _value = default;
+                _owner.ValueChanged(this, this, oldValue);
             }
         }
 
-        public void Start() => Start(false);
-
-        public void Start(bool ignoreBatchUpdate)
+        private void SetValue(T? value)
         {
-            // We can't use _subscription to check whether we're subscribed because it won't be set
-            // until Subscribe has finished, which will be too late to prevent reentrancy. In addition
-            // don't re-subscribe to completed/disposed bindings (indicated by Unset priority).
-            if (!_isSubscribed &&
-                Priority != BindingPriority.Unset &&
-                (!_batchUpdate || ignoreBatchUpdate))
+            _ = _owner ?? throw new AvaloniaInternalException("BindingEntry has no owner.");
+
+            if (Property.ValidateValue?.Invoke(value) == false)
             {
-                _isSubscribed = true;
-                _subscription = Source.Subscribe(this);
+                value = Property.GetDefaultValue(_owner.Owner.GetType());
+            }
+
+            if (!_hasValue || !EqualityComparer<T>.Default.Equals(_value, value))
+            {
+                var oldValue = _hasValue ? new Optional<T>(_value) : default;
+                _value = value;
+                _hasValue = true;
+
+                // Only raise a property changed notifcation if we're not currently in the process of
+                // starting the binding (in this case the value will be read immediately afterwards
+                // and a notification raised).
+                if (_bindingSubscription != Disposable.Empty)
+                    _owner.ValueChanged(this, this, oldValue);
             }
         }
 
-        public void Reparent(IValueSink sink) => _sink = sink;
-
-        public void RaiseValueChanged(
-            IValueSink sink,
-            IAvaloniaObject owner,
-            AvaloniaProperty property,
-            Optional<object> oldValue,
-            Optional<object> newValue)
+        private void SetValue(object? value)
         {
-            sink.ValueChanged(new AvaloniaPropertyChangedEventArgs<T>(
-                owner,
-                (AvaloniaProperty<T>)property,
-                oldValue.Cast<T>(),
-                newValue.Cast<T>(),
-                Priority));
+            if (value == AvaloniaProperty.UnsetValue)
+                ClearValue();
+            else if (value != BindingOperations.DoNothing)
+                SetValue((T?)value);
         }
 
-        private void UpdateValue(BindingValue<T> value)
+        private void StartIfNecessary()
         {
-            if (value.HasValue && Property.ValidateValue?.Invoke(value.Value) == false)
+            if (_bindingSubscription is null)
             {
-                value = Property.GetDefaultValue(_owner.GetType());
+                // Prevent reentrancy by first assigning the subscription to a dummy
+                // non-null value.
+                _bindingSubscription = Disposable.Empty;
+
+                if (_source is IObservable<BindingValue<T>> bv)
+                    _bindingSubscription = bv.Subscribe(this);
+                else if (_source is IObservable<T> b)
+                    _bindingSubscription = b.Subscribe(_shim ??= new TypedObserverShim(this));
+                else
+                    _bindingSubscription = ((IObservable<object?>)_source).Subscribe(this);
             }
+        }
 
-            if (value.Type == BindingValueType.DoNothing)
-            {
-                return;
-            }
+        private void BindingCompleted()
+        {
+            _bindingSubscription = null;
+            ClearValue();
+        }
 
-            var old = _value;
-
-            if (value.Type != BindingValueType.DataValidationError)
-            {
-                _value = value.ToOptional();
-            }
-
-            _sink.ValueChanged(new AvaloniaPropertyChangedEventArgs<T>(_owner, Property, old, value, Priority));
+        private class TypedObserverShim : IObserver<T?>
+        {
+            private readonly BindingEntry<T> _owner;
+            public TypedObserverShim(BindingEntry<T> owner) => _owner = owner;
+            public void OnCompleted() => _owner.BindingCompleted();
+            public void OnError(Exception error) => _owner.BindingCompleted();
+            public void OnNext(T? value) => _owner.SetValue(value);
         }
     }
 }

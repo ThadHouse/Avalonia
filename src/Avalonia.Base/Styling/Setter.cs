@@ -1,9 +1,8 @@
-using System;
+﻿using System;
 using Avalonia.Animation;
 using Avalonia.Data;
-using Avalonia.Data.Core;
 using Avalonia.Metadata;
-using Avalonia.Utilities;
+using Avalonia.PropertyStore;
 
 #nullable enable
 
@@ -16,10 +15,8 @@ namespace Avalonia.Styling
     /// A <see cref="Setter"/> is used to set a <see cref="AvaloniaProperty"/> value on a
     /// <see cref="AvaloniaObject"/> depending on a condition.
     /// </remarks>
-    public class Setter : ISetter, IAnimationSetter, IAvaloniaPropertyVisitor<Setter.SetterVisitorData>
+    public class Setter : IValueStoreSetter, IValueEntry, IAnimationSetter
     {
-        private object? _value;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Setter"/> class.
         /// </summary>
@@ -32,7 +29,7 @@ namespace Avalonia.Styling
         /// </summary>
         /// <param name="property">The property to set.</param>
         /// <param name="value">The property value.</param>
-        public Setter(AvaloniaProperty property, object value)
+        public Setter(AvaloniaProperty property, object? value)
         {
             Property = property;
             Value = value;
@@ -46,97 +43,39 @@ namespace Avalonia.Styling
         /// <summary>
         /// Gets or sets the property value.
         /// </summary>
-        [Content]
+        /// [Content]
         [AssignBinding]
         [DependsOn(nameof(Property))]
-        public object? Value
+        public object? Value { get; set; }
+
+        bool IValueEntry.HasValue => true;
+        AvaloniaProperty IValueEntry.Property => EnsureProperty();
+
+        IValueEntry IValueStoreSetter.Instance(StyleInstance instance, IStyleable target)
         {
-            get => _value;
-            set
-            {
-                (value as ISetterValue)?.Initialize(this);
-                _value = value;
-            }
-        }
+            _ = Property ?? throw new InvalidOperationException("Setter.Property must be set.");
 
-        public ISetterInstance Instance(IStyleable target)
-        {
-            target = target ?? throw new ArgumentNullException(nameof(target));
-
-            if (Property is null)
+            if (Value is IBinding binding)
             {
-                throw new InvalidOperationException("Setter.Property must be set.");
-            }
-
-            var data = new SetterVisitorData
-            {
-                target = target,
-                value = Value,
-            };
-
-            Property.Accept(this, ref data);
-            return data.result!;
-        }
-
-        void IAvaloniaPropertyVisitor<SetterVisitorData>.Visit<T>(
-            StyledPropertyBase<T> property,
-            ref SetterVisitorData data)
-        {
-            if (data.value is IBinding binding)
-            {
-                data.result = new PropertySetterBindingInstance<T>(
-                    data.target,
-                    property,
-                    binding);
-            }
-            else if (data.value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(property.PropertyType))
-            {
-                data.result = new PropertySetterLazyInstance<T>(
-                    data.target,
-                    property,
-                    () => (T)template.Build());
+                return new SetterBindingInstance(instance, Property, binding);
             }
             else
             {
-                data.result = new PropertySetterInstance<T>(
-                    data.target,
-                    property,
-                    (T)data.value);
+                if (!Property.IsValidValue(Value))
+                    throw new InvalidCastException($"Setter value '{Value}' is not a valid value for property '{Property}'.");
+                return this;
             }
         }
 
-        void IAvaloniaPropertyVisitor<SetterVisitorData>.Visit<T>(
-            DirectPropertyBase<T> property,
-            ref SetterVisitorData data)
+        bool IValueEntry.TryGetValue(out object? value)
         {
-            if (data.value is IBinding binding)
-            {
-                data.result = new PropertySetterBindingInstance<T>(
-                    data.target,
-                    property,
-                    binding);
-            }
-            else if (data.value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(property.PropertyType))
-            {
-                data.result = new PropertySetterLazyInstance<T>(
-                    data.target,
-                    property,
-                    () => (T)template.Build());
-            }
-            else
-            {
-                data.result = new PropertySetterInstance<T>(
-                    data.target,
-                    property,
-                    (T)data.value);
-            }
+            value = Value;
+            return true;
         }
 
-        private struct SetterVisitorData
+        private AvaloniaProperty EnsureProperty()
         {
-            public IStyleable target;
-            public object? value;
-            public ISetterInstance? result;
+            return Property ?? throw new InvalidOperationException("Setter.Property must be set.");
         }
     }
 }

@@ -1,8 +1,10 @@
 using System;
 using System.Diagnostics;
 using Avalonia.Data;
-using Avalonia.Reactive;
+using Avalonia.PropertyStore;
 using Avalonia.Utilities;
+
+#nullable enable
 
 namespace Avalonia
 {
@@ -27,12 +29,12 @@ namespace Avalonia
             Type ownerType,            
             StyledPropertyMetadata<TValue> metadata,
             bool inherits = false,
-            Func<TValue, bool> validate = null,
-            Action<IAvaloniaObject, bool> notifying = null)
+            Func<TValue?, bool>? validate = null,
+            Action<IAvaloniaObject, bool>? notifying = null)
                 : base(name, ownerType, metadata, notifying)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
-            Contract.Requires<ArgumentNullException>(ownerType != null);
+            _ = name ?? throw new ArgumentNullException(nameof(name));
+            _ = ownerType ?? throw new ArgumentNullException(nameof(ownerType));
 
             if (name.Contains("."))
             {
@@ -72,7 +74,7 @@ namespace Avalonia
         /// <summary>
         /// Gets the value validation callback for the property.
         /// </summary>
-        public Func<TValue, bool> ValidateValue { get; }
+        public Func<TValue?, bool>? ValidateValue { get; }
 
         /// <summary>
         /// Gets a value indicating whether this property has any value coercion callbacks defined
@@ -99,7 +101,7 @@ namespace Avalonia
         /// <returns>The default value.</returns>
         public TValue GetDefaultValue(Type type)
         {
-            Contract.Requires<ArgumentNullException>(type != null);
+            _ = type ?? throw new ArgumentNullException(nameof(type));
 
             return GetMetadata(type).DefaultValue;
         }
@@ -183,72 +185,37 @@ namespace Avalonia
         }
 
         /// <inheritdoc/>
-        object IStyledPropertyAccessor.GetDefaultValue(Type type) => GetDefaultBoxedValue(type);
+        object? IStyledPropertyAccessor.GetDefaultValue(Type type) => GetDefaultBoxedValue(type);
 
-        /// <inheritdoc/>
-        internal override void RouteClearValue(IAvaloniaObject o)
-        {
-            o.ClearValue<TValue>(this);
-        }
-
-        /// <inheritdoc/>
-        internal override object RouteGetValue(IAvaloniaObject o)
-        {
-            return o.GetValue<TValue>(this);
-        }
-
-        /// <inheritdoc/>
-        internal override object RouteGetBaseValue(IAvaloniaObject o, BindingPriority maxPriority)
-        {
-            var value = o.GetBaseValue<TValue>(this, maxPriority);
-            return value.HasValue ? value.Value : AvaloniaProperty.UnsetValue;
-        }
-
-        /// <inheritdoc/>
-        internal override IDisposable RouteSetValue(
-            IAvaloniaObject o,
-            object value,
-            BindingPriority priority)
-        {
-            var v = TryConvert(value);
-
-            if (v.HasValue)
-            {
-                return o.SetValue<TValue>(this, (TValue)v.Value, priority);
-            }
-            else if (v.Type == BindingValueType.UnsetValue)
-            {
-                o.ClearValue(this);
-            }
-            else if (v.HasError)
-            {
-                throw v.Error;
-            }
-
-            return null;
-        }
-
-        /// <inheritdoc/>
-        internal override IDisposable RouteBind(
-            IAvaloniaObject o,
-            IObservable<BindingValue<object>> source,
-            BindingPriority priority)
-        {
-            var adapter = TypedBindingAdapter<TValue>.Create(o, this, source);
-            return o.Bind<TValue>(this, adapter, priority);
-        }
-
-        /// <inheritdoc/>
-        internal override void RouteInheritanceParentChanged(
+        internal override object GetValueByPriority(
             AvaloniaObject o,
-            IAvaloniaObject oldParent)
+            BindingPriority minPriority,
+            BindingPriority maxPriority)
         {
-            o.InheritanceParentChanged(this, oldParent);
+            var v = o.GetValueByPriority(this, minPriority, maxPriority);
+            return v.HasValue ? v.Value : AvaloniaProperty.UnsetValue;
         }
 
-        private object GetDefaultBoxedValue(Type type)
+        internal override void RaisePropertyChanged(
+            AvaloniaObject owner,
+            object? oldValue,
+            object? newValue,
+            BindingPriority priority,
+            bool isEffectiveValueChange)
         {
-            Contract.Requires<ArgumentNullException>(type != null);
+            var o = oldValue != UnsetValue ? new Optional<TValue>((TValue?)oldValue) : default;
+            var n = newValue != UnsetValue ? new BindingValue<TValue>((TValue?)newValue) : default;
+            owner.RaisePropertyChanged(this, o, n, priority, isEffectiveValueChange);
+        }
+
+        internal override void SetValue(AvaloniaObject target, object value)
+        {
+            target.SetValue<TValue>(this, (TValue)value);
+        }
+
+        private object? GetDefaultBoxedValue(Type type)
+        {
+            _ = type ?? throw new ArgumentNullException(nameof(type));
 
             return GetMetadata(type).DefaultValue;
         }

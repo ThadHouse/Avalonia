@@ -182,23 +182,11 @@ namespace Avalonia.Controls.Generators
         /// <returns>The created container control.</returns>
         protected virtual IControl CreateContainer(object item)
         {
-            var result = item as IControl;
-
-            if (result == null)
+            return item as IControl ?? new ContentPresenter
             {
-                result = new ContentPresenter();
-                result.SetValue(ContentPresenter.ContentProperty, item, BindingPriority.Style);
-
-                if (ItemTemplate != null)
-                {
-                    result.SetValue(
-                        ContentPresenter.ContentTemplateProperty,
-                        ItemTemplate,
-                        BindingPriority.TemplatedParent);
-                }
-            }
-
-            return result;
+                Content = item,
+                ContentTemplate = ItemTemplate,
+            };
         }
 
         /// <summary>

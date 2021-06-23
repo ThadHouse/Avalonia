@@ -109,45 +109,46 @@ namespace Avalonia.Styling
             set => _styles[index] = value;
         }
 
-        public SelectorMatchResult TryAttach(IStyleable target, IStyleHost? host)
+        internal SelectorMatchResult TryAttach(IStyleable target, IStyleHost? host)
         {
-            _cache ??= new Dictionary<Type, List<IStyle>?>();
+            throw new NotImplementedException();
+            ////_cache ??= new Dictionary<Type, List<IStyle>?>();
 
-            if (_cache.TryGetValue(target.StyleKey, out var cached))
-            {
-                if (cached is object)
-                {
-                    foreach (var style in cached)
-                    {
-                        style.TryAttach(target, host);
-                    }
+            ////if (_cache.TryGetValue(target.StyleKey, out var cached))
+            ////{
+            ////    if (cached is object)
+            ////    {
+            ////        foreach (var style in cached)
+            ////        {
+            ////            style.TryAttach(target, host);
+            ////        }
 
-                    return SelectorMatchResult.AlwaysThisType;
-                }
-                else
-                {
-                    return SelectorMatchResult.NeverThisType;
-                }
-            }
-            else
-            {
-                List<IStyle>? matches = null;
+            ////        return SelectorMatchResult.AlwaysThisType;
+            ////    }
+            ////    else
+            ////    {
+            ////        return SelectorMatchResult.NeverThisType;
+            ////    }
+            ////}
+            ////else
+            ////{
+            ////    List<IStyle>? matches = null;
 
-                foreach (var child in this)
-                {
-                    if (child.TryAttach(target, host) != SelectorMatchResult.NeverThisType)
-                    {
-                        matches ??= new List<IStyle>();
-                        matches.Add(child);
-                    }
-                }
+            ////    foreach (var child in this)
+            ////    {
+            ////        if (child.TryAttach(target, host) != SelectorMatchResult.NeverThisType)
+            ////        {
+            ////            matches ??= new List<IStyle>();
+            ////            matches.Add(child);
+            ////        }
+            ////    }
 
-                _cache.Add(target.StyleKey, matches);
+            ////    _cache.Add(target.StyleKey, matches);
                 
-                return matches is null ?
-                    SelectorMatchResult.NeverThisType :
-                    SelectorMatchResult.AlwaysThisType;
-            }
+            ////    return matches is null ?
+            ////        SelectorMatchResult.NeverThisType :
+            ////        SelectorMatchResult.AlwaysThisType;
+            ////}
         }
 
         /// <inheritdoc/>

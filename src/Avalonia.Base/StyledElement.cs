@@ -10,6 +10,7 @@ using Avalonia.Data;
 using Avalonia.Diagnostics;
 using Avalonia.Logging;
 using Avalonia.LogicalTree;
+using Avalonia.PropertyStore;
 using Avalonia.Styling;
 
 #nullable enable
@@ -24,7 +25,7 @@ namespace Avalonia
     /// - Implements <see cref="ILogical"/> to form part of a logical tree.
     /// - A collection of class strings for custom styling.
     /// </summary>
-    public class StyledElement : Animatable, IDataContextProvider, IStyledElement, ISetLogicalParent, ISetInheritanceParent
+    public class StyledElement : Animatable, IDataContextProvider, IStyledElement, ISetLogicalParent
     {
         /// <summary>
         /// Defines the <see cref="DataContext"/> property.
@@ -300,7 +301,7 @@ namespace Avalonia
         bool IStyleHost.IsStylesInitialized => _styles != null;
 
         /// <inheritdoc/>
-        IStyleHost? IStyleHost.StylingParent => (IStyleHost?)InheritanceParent;
+        IStyleHost? IStyleHost.StylingParent => (IStyleHost?)Parent;
 
         /// <inheritdoc/>
         public virtual void BeginInit()
@@ -332,22 +333,23 @@ namespace Avalonia
         /// </returns>
         protected bool ApplyStyling()
         {
-            if (_initCount == 0 && !_styled)
-            {
-                try
-                {
-                    BeginBatchUpdate();
-                    AvaloniaLocator.Current.GetService<IStyler>()?.ApplyStyles(this);
-                }
-                finally
-                {
-                    EndBatchUpdate();
-                }
+            throw new NotImplementedException();
+            ////if (_initCount == 0 && !_styled)
+            ////{
+            ////    try
+            ////    {
+            ////        BeginBatchUpdate();
+            ////        AvaloniaLocator.Current.GetService<IStyler>()?.ApplyStyles(this);
+            ////    }
+            ////    finally
+            ////    {
+            ////        EndBatchUpdate();
+            ////    }
 
-                _styled = true;
-            }
+            ////    _styled = true;
+            ////}
 
-            return _styled;
+            ////return _styled;
         }
 
         /// <summary>
@@ -364,6 +366,10 @@ namespace Avalonia
                 Initialized?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        protected internal override int GetInheritanceChildCount() => _logicalChildren?.Count ?? 0;
+        protected internal override AvaloniaObject GetInheritanceChild(int index) => (AvaloniaObject)_logicalChildren![index];
+        protected internal override AvaloniaObject? GetInheritanceParent() => Parent as AvaloniaObject;
 
         internal StyleDiagnostics GetStyleDiagnosticsInternal()
         {
@@ -418,12 +424,8 @@ namespace Avalonia
                     throw new InvalidOperationException("The Control already has a parent.");
                 }
 
-                if (InheritanceParent == null || parent == null)
-                {
-                    InheritanceParent = parent as AvaloniaObject;
-                }
-
                 Parent = (IStyledElement?)parent;
+                InheritanceParentChanged();
 
                 if (_logicalRoot != null)
                 {
@@ -451,38 +453,22 @@ namespace Avalonia
                     NotifyResourcesChanged();
                 }
 
-#nullable disable
                 RaisePropertyChanged(
                     ParentProperty,
-                    new Optional<IStyledElement>(old),
-                    new BindingValue<IStyledElement>(Parent),
+                    new Optional<IStyledElement?>(old),
+                    new BindingValue<IStyledElement?>(Parent),
                     BindingPriority.LocalValue);
-#nullable enable
             }
         }
 
-        /// <summary>
-        /// Sets the styled element's inheritance parent.
-        /// </summary>
-        /// <param name="parent">The parent.</param>
-        void ISetInheritanceParent.SetParent(IAvaloniaObject? parent)
+        void IStyleable.ApplyStyle(IStyle style)
         {
-            InheritanceParent = parent;
+            if ((style as Style)?.Instance(this) is IValueFrame frame)
+                GetValueStore().ApplyStyle(frame);
         }
 
-        void IStyleable.StyleApplied(IStyleInstance instance)
-        {
-            instance = instance ?? throw new ArgumentNullException(nameof(instance));
-
-            _appliedStyles ??= new List<IStyleInstance>();
-            _appliedStyles.Add(instance);
-        }
-
-        void IStyleable.DetachStyles() => DetachStyles();
-
-        void IStyleable.DetachStyles(IReadOnlyList<IStyle> styles) => DetachStyles(styles);
-
-        void IStyleable.InvalidateStyles() => InvalidateStyles();
+        void IStyleable.BeginStyling() => GetValueStore().BeginStyling();
+        void IStyleable.EndStyling() => GetValueStore().EndStyling();
 
         void IStyleHost.StylesAdded(IReadOnlyList<IStyle> styles)
         {
@@ -608,7 +594,7 @@ namespace Avalonia
                     for (var i = 0; i < logicalChildrenCount; i++)
                     {
                         if (element.LogicalChildren[i] is StyledElement s &&
-                            s.InheritanceParent == element &&
+                            s.GetInheritanceParent() == element &&
                             !s.IsSet(DataContextProperty))
                         {
                             DataContextNotifying(s, updateStarted);
@@ -755,26 +741,27 @@ namespace Avalonia
 
         private void DetachStyles()
         {
-            if (_appliedStyles is object)
-            {
-                BeginBatchUpdate();
+            throw new NotImplementedException();
+            ////if (_appliedStyles is object)
+            ////{
+            ////    BeginBatchUpdate();
 
-                try
-                {
-                    foreach (var i in _appliedStyles)
-                    {
-                        i.Dispose();
-                    }
+            ////    try
+            ////    {
+            ////        foreach (var i in _appliedStyles)
+            ////        {
+            ////            i.Dispose();
+            ////        }
 
-                    _appliedStyles.Clear();
-                }
-                finally
-                {
-                    EndBatchUpdate();
-                }
-            }
+            ////        _appliedStyles.Clear();
+            ////    }
+            ////    finally
+            ////    {
+            ////        EndBatchUpdate();
+            ////    }
+            ////}
 
-            _styled = false;
+            ////_styled = false;
         }
 
         private void DetachStyles(IReadOnlyList<IStyle> styles)

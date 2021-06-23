@@ -1,66 +1,51 @@
 ﻿using System;
-using System.Collections.Generic;
+
+#nullable enable
 
 namespace Avalonia.Reactive
 {
     internal class AvaloniaPropertyObservable<T> : LightweightObservableBase<T>, IDescription
     {
-        private readonly WeakReference<IAvaloniaObject> _target;
-        private readonly AvaloniaProperty _property;
-        private T _value;
+        private readonly WeakReference<AvaloniaObject> _target;
+        private readonly DirectPropertyBase<T>? _directProperty;
+        private readonly StyledPropertyBase<T>? _styledProperty;
 
         public AvaloniaPropertyObservable(
-            IAvaloniaObject target,
-            AvaloniaProperty property)
+            AvaloniaObject target,
+            StyledPropertyBase<T> property)
         {
-            _target = new WeakReference<IAvaloniaObject>(target);
-            _property = property;
+            _target = new(target);
+            _styledProperty = property;
         }
 
-        public string Description => $"{_target.GetType().Name}.{_property.Name}";
-
-        protected override void Initialize()
+        public AvaloniaPropertyObservable(
+            AvaloniaObject target,
+            DirectPropertyBase<T> property)
         {
-            if (_target.TryGetTarget(out var target))
+            _target = new(target);
+            _directProperty = property;
+        }
+
+        public string Description
+        {
+            get
             {
-                _value = (T)target.GetValue(_property);
-                target.PropertyChanged += PropertyChanged;
+                return _styledProperty is object ?
+                    $"{_target.GetType().Name}.{_styledProperty.Name}" :
+                    $"{_target.GetType().Name}.{_directProperty!.Name}";
             }
         }
 
-        protected override void Deinitialize()
-        {
-            if (_target.TryGetTarget(out var target))
-            {
-                target.PropertyChanged -= PropertyChanged;
-            }
-        }
+        public void OnNext(T value) => PublishNext(value);
 
         protected override void Subscribed(IObserver<T> observer, bool first)
         {
-            observer.OnNext(_value);
-        }
-
-        private void PropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property == _property)
+            if (_target.TryGetTarget(out var target))
             {
-                T newValue;
-
-                if (e is AvaloniaPropertyChangedEventArgs<T> typed)
-                {
-                    newValue = typed.Sender.GetValue(typed.Property);
-                }
-                else
-                {
-                    newValue = (T)e.Sender.GetValue(e.Property);
-                }
-
-                if (!EqualityComparer<T>.Default.Equals(newValue, _value))
-                {
-                    _value = newValue;
-                    PublishNext(_value);
-                }
+                var value = _styledProperty is object ?
+                    target.GetValue(_styledProperty) :
+                    target.GetValue(_directProperty!);
+                observer.OnNext(value!);
             }
         }
     }

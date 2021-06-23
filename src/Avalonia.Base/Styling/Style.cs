@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Metadata;
+using Avalonia.PropertyStore;
 
 #nullable enable
 
@@ -17,6 +18,7 @@ namespace Avalonia.Styling
         private IResourceDictionary? _resources;
         private List<ISetter>? _setters;
         private List<IAnimation>? _animations;
+        private StyleInstance? _sharedInstance;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Style"/> class.
@@ -94,21 +96,36 @@ namespace Avalonia.Styling
 
         public event EventHandler? OwnerChanged;
 
-        public SelectorMatchResult TryAttach(IStyleable target, IStyleHost? host)
+        internal IValueFrame? Instance(IStyleable target)
         {
-            target = target ?? throw new ArgumentNullException(nameof(target));
+            var match = Selector?.Evaluate(target, true);
 
-            var match = Selector is object ? Selector.Match(target) :
-                target == host ? SelectorMatch.AlwaysThisInstance : SelectorMatch.NeverThisInstance;
+            if (match?.IsMatch != true)
+                return null;
 
-            if (match.IsMatch && (_setters is object || _animations is object))
+            if (_sharedInstance is object)
+                return _sharedInstance;
+
+            var instance = new StyleInstance(match.Value.Activator);
+            var canInstanceInPlace = true;
+
+            if (_setters is object)
             {
-                var instance = new StyleInstance(this, target, _setters, _animations, match.Activator);
-                target.StyleApplied(instance);
-                instance.Start();
+                foreach (var setter in _setters)
+                {
+                    if (setter is IValueStoreSetter v)
+                    {
+                        var setterInstance = v.Instance(instance, target);
+                        instance.Add(setterInstance);
+                        canInstanceInPlace &= setterInstance == setter;
+                    }
+                }
             }
 
-            return match.Result;
+            if (canInstanceInPlace)
+                _sharedInstance = instance;
+
+            return instance;
         }
 
         public bool TryGetResource(object key, out object? result)

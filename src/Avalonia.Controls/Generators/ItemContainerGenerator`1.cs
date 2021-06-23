@@ -57,10 +57,10 @@ namespace Avalonia.Controls.Generators
 
                 if (ContentTemplateProperty != null)
                 {
-                    result.SetValue(ContentTemplateProperty, ItemTemplate, BindingPriority.Style);
+                    result.SetValue(ContentTemplateProperty, ItemTemplate);
                 }
 
-                result.SetValue(ContentProperty, item, BindingPriority.Style);
+                result.SetValue(ContentProperty, item);
 
                 if (!(item is IControl))
                 {
