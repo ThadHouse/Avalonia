@@ -123,19 +123,12 @@ namespace Avalonia.Base.UnitTests
 
             private static AvaloniaPropertyChangedEventArgs<T> Clone<T>(AvaloniaPropertyChangedEventArgs<T> change)
             {
-                var result = new AvaloniaPropertyChangedEventArgs<T>(
+                return new AvaloniaPropertyChangedEventArgs<T>(
                     change.Sender,
                     change.Property,
                     change.OldValue,
                     change.NewValue,
                     change.Priority);
-
-                if (!change.IsEffectiveValueChange)
-                {
-                    result.MarkNonEffectiveValue();
-                }
-
-                return result;
             }
         }
     }

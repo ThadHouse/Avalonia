@@ -36,39 +36,11 @@ namespace Avalonia.Base.UnitTests.Styling
         }
 
         [Fact]
-        public void Setting_Parent_Should_Not_Set_InheritanceParent_If_Already_Set()
-        {
-            var parent = new Decorator();
-            var inheritanceParent = new Decorator();
-            var target = new TestControl();
-
-            ((ISetInheritanceParent)target).SetParent(inheritanceParent);
-            parent.Child = target;
-
-            Assert.Equal(parent, target.Parent);
-            Assert.Equal(inheritanceParent, target.InheritanceParent);
-        }
-
-        [Fact]
         public void InheritanceParent_Should_Be_Cleared_When_Removed_From_Parent()
         {
             var parent = new Decorator();
             var target = new TestControl();
 
-            parent.Child = target;
-            parent.Child = null;
-
-            Assert.Null(target.InheritanceParent);
-        }
-
-        [Fact]
-        public void InheritanceParent_Should_Be_Cleared_When_Removed_From_Parent_When_Has_Different_InheritanceParent()
-        {
-            var parent = new Decorator();
-            var inheritanceParent = new Decorator();
-            var target = new TestControl();
-
-            ((ISetInheritanceParent)target).SetParent(inheritanceParent);
             parent.Child = target;
             parent.Child = null;
 
@@ -600,7 +572,7 @@ namespace Avalonia.Base.UnitTests.Styling
             public event EventHandler DataContextBeginUpdate;
             public event EventHandler DataContextEndUpdate;
 
-            public new IAvaloniaObject InheritanceParent => base.InheritanceParent;
+            public IAvaloniaObject InheritanceParent => GetInheritanceParent();
 
             protected override void OnDataContextBeginUpdate()
             {

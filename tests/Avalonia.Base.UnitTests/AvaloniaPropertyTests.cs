@@ -151,38 +151,17 @@ namespace Avalonia.Base.UnitTests
                 throw new NotImplementedException();
             }
 
-            internal override IDisposable RouteBind(
-                IAvaloniaObject o,
-                IObservable<BindingValue<object>> source,
-                BindingPriority priority)
+            internal override IDisposable Bind(AvaloniaObject target, IObservable<object> source, BindingPriority priority)
             {
                 throw new NotImplementedException();
             }
 
-            internal override void RouteClearValue(IAvaloniaObject o)
+            internal override object GetValueByPriority(AvaloniaObject target, BindingPriority minPriority, BindingPriority maxPriority)
             {
                 throw new NotImplementedException();
             }
 
-            internal override object RouteGetValue(IAvaloniaObject o)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal override object RouteGetBaseValue(IAvaloniaObject o, BindingPriority maxPriority)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal override void RouteInheritanceParentChanged(AvaloniaObject o, IAvaloniaObject oldParent)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal override IDisposable RouteSetValue(
-                IAvaloniaObject o,
-                object value,
-                BindingPriority priority)
+            internal override void SetValue(AvaloniaObject target, object value)
             {
                 throw new NotImplementedException();
             }

@@ -89,8 +89,6 @@ namespace Avalonia.Themes.Fluent
             }
         }
 
-        public SelectorMatchResult TryAttach(IStyleable target, IStyleHost? host) => Loaded.TryAttach(target, host);
-
         public bool TryGetResource(object key, out object? value)
         {
             if (!_isLoading && Loaded is IResourceProvider p)

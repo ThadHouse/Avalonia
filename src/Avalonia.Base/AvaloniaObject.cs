@@ -334,7 +334,7 @@ namespace Avalonia
         public IDisposable Bind(
             AvaloniaProperty property,
             IObservable<object?> source,
-            BindingPriority priority) => property.Bind(this, source, priority);
+            BindingPriority priority = BindingPriority.LocalValue) => property.Bind(this, source, priority);
 
         /// <summary>
         /// Binds a <see cref="AvaloniaProperty"/> to an observable.
