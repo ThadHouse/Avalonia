@@ -135,11 +135,11 @@ namespace Avalonia.Base.UnitTests.Styling
             List<string> values = new List<string>();
             target.GetObservable(Class1.FooProperty).Subscribe(x => values.Add(x));
 
-            styles.TryAttach(target, null);
+            Apply(target, styles);
             target.Classes.Add("foo");
             target.Classes.Remove("foo");
 
-            Assert.Equal(new[] { "foodefault", "Foo", "Bar", "foodefault" }, values);
+            Assert.Equal(new[] { "foodefault", "Bar", "foodefault" }, values);
         }
 
         [Fact]
@@ -169,7 +169,7 @@ namespace Avalonia.Base.UnitTests.Styling
             List<string> values = new List<string>();
             target.GetObservable(Class1.FooProperty).Subscribe(x => values.Add(x));
 
-            styles.TryAttach(target, null);
+            Apply(target, styles);
             target.Classes.Add("bar");
             target.Classes.Add("foo");
             target.Classes.Remove("foo");
@@ -211,7 +211,7 @@ namespace Avalonia.Base.UnitTests.Styling
             List<string> values = new List<string>();
             target.GetObservable(Class1.FooProperty).Subscribe(x => values.Add(x));
 
-            styles.TryAttach(target, null);
+            Apply(target, styles);
             target.Classes.Add("bar");
             target.Classes.Add("foo");
             target.Classes.Remove("foo");
@@ -447,7 +447,7 @@ namespace Avalonia.Base.UnitTests.Styling
             };
 
             var target = new Class1();
-            styles.TryAttach(target, null);
+            Apply(target, styles);
 
             Assert.NotNull(target.Child);
             Assert.Equal(1, instantiationCount);
@@ -483,7 +483,7 @@ namespace Avalonia.Base.UnitTests.Styling
             };
 
             var target = new Class1();
-            ((IStyleable)target).ApplyStyle(styles);
+            Apply(target, styles);
 
             Assert.NotNull(target.Child);
             Assert.Equal(1, instantiationCount);
@@ -718,6 +718,18 @@ namespace Avalonia.Base.UnitTests.Styling
             host.Invocations.Clear();
             ((IResourceProvider)target).AddOwner(host.Object);
             resources.Verify(x => x.AddOwner(host.Object), Times.Once);
+        }
+
+        private void Apply(IStyleable target, IReadOnlyList<IStyle> styles)
+        {
+            target.BeginStyling();
+
+            foreach (var style in styles)
+            {
+                target.ApplyStyle((Style)style);
+            }
+
+            target.EndStyling();
         }
 
         private class Class1 : Control

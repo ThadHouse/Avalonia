@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 #nullable enable
 
@@ -27,7 +28,23 @@ namespace Avalonia.Styling
 
             if (host.IsStylesInitialized)
             {
-                host.Styles.TryAttach(target, host);
+                foreach (var style in host.Styles)
+                    ApplyStyle(target, style);
+            }
+        }
+
+        private void ApplyStyle(IStyleable target, IStyle style)
+        {
+            if (style is Style s)
+            {
+                target.ApplyStyle(s);
+            }
+            else if (style is IEnumerable<IStyle> styles)
+            {
+                foreach (var child in styles)
+                {
+                    ApplyStyle(target, child);
+                }
             }
         }
     }

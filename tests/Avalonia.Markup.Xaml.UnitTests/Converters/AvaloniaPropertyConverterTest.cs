@@ -137,17 +137,17 @@ namespace Avalonia.Markup.Xaml.UnitTests.Converters
                 get { throw new NotImplementedException(); }
             }
 
-            public void ApplyStyle(IStyle style)
+            public void ApplyStyle(Style style)
             {
                 throw new NotImplementedException();
             }
 
-            public void BeginStyling()
+            public new void BeginStyling()
             {
                 throw new NotImplementedException();
             }
 
-            public void EndStyling()
+            public new void EndStyling()
             {
                 throw new NotImplementedException();
             }

@@ -92,7 +92,6 @@ namespace Avalonia.Styling
         public IList<IAnimation> Animations => _animations ??= new List<IAnimation>();
 
         bool IResourceNode.HasResources => _resources?.Count > 0;
-        IReadOnlyList<IStyle> IStyle.Children => Array.Empty<IStyle>();
 
         public event EventHandler? OwnerChanged;
 

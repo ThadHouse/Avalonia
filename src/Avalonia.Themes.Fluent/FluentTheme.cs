@@ -69,8 +69,6 @@ namespace Avalonia.Themes.Fluent
 
         bool IResourceNode.HasResources => (Loaded as IResourceProvider)?.HasResources ?? false;
 
-        IReadOnlyList<IStyle> IStyle.Children => _loaded ?? Array.Empty<IStyle>();
-
         public event EventHandler OwnerChanged
         {
             add

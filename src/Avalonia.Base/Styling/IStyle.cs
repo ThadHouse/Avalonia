@@ -10,9 +10,5 @@ namespace Avalonia.Styling
     /// </summary>
     public interface IStyle
     {
-        /// <summary>
-        /// Gets a collection of child styles.
-        /// </summary>
-        IReadOnlyList<IStyle> Children { get; }
     }
 }

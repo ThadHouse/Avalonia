@@ -333,23 +333,21 @@ namespace Avalonia
         /// </returns>
         protected bool ApplyStyling()
         {
-            throw new NotImplementedException();
-            ////if (_initCount == 0 && !_styled)
-            ////{
-            ////    try
-            ////    {
-            ////        BeginBatchUpdate();
-            ////        AvaloniaLocator.Current.GetService<IStyler>()?.ApplyStyles(this);
-            ////    }
-            ////    finally
-            ////    {
-            ////        EndBatchUpdate();
-            ////    }
+            if (_initCount == 0 && !_styled)
+            {
+                var styler = AvaloniaLocator.Current.GetService<IStyler>();
 
-            ////    _styled = true;
-            ////}
+                if (styler is object)
+                {
+                    BeginStyling();
+                    try { styler.ApplyStyles(this); }
+                    finally{ EndStyling(); }
+                }
 
-            ////return _styled;
+                _styled = true;
+            }
+
+            return _styled;
         }
 
         /// <summary>
@@ -461,9 +459,9 @@ namespace Avalonia
             }
         }
 
-        void IStyleable.ApplyStyle(IStyle style)
+        void IStyleable.ApplyStyle(Style style)
         {
-            if ((style as Style)?.Instance(this) is IValueFrame frame)
+            if (style.Instance(this) is IValueFrame frame)
                 GetValueStore().ApplyStyle(frame);
         }
 
@@ -477,8 +475,9 @@ namespace Avalonia
 
         void IStyleHost.StylesRemoved(IReadOnlyList<IStyle> styles)
         {
-            var allStyles = RecurseStyles(styles);
-            DetachStylesFromThisAndDescendents(allStyles);
+            throw new NotImplementedException();
+            //var allStyles = RecurseStyles(styles);
+            //DetachStylesFromThisAndDescendents(allStyles);
         }
 
         protected virtual void LogicalChildrenCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -741,7 +740,7 @@ namespace Avalonia
 
         private void DetachStyles()
         {
-            throw new NotImplementedException();
+            ////throw new NotImplementedException();
             ////if (_appliedStyles is object)
             ////{
             ////    BeginBatchUpdate();
@@ -834,41 +833,6 @@ namespace Avalonia
             {
                 e ??= ResourcesChangedEventArgs.Empty;
                 NotifyChildResourcesChanged(e);
-            }
-        }
-
-        private static IReadOnlyList<IStyle> RecurseStyles(IReadOnlyList<IStyle> styles)
-        {
-            var count = styles.Count;
-            List<IStyle>? result = null;
-
-            for (var i = 0; i < count; ++i)
-            {
-                var style = styles[i];
-
-                if (style.Children.Count > 0)
-                {
-                    if (result is null)
-                    {
-                        result = new List<IStyle>(styles);
-                    }
-
-                    RecurseStyles(style.Children, result);
-                }
-            }
-
-            return result ?? styles;
-        }
-
-        private static void RecurseStyles(IReadOnlyList<IStyle> styles, List<IStyle> result)
-        {
-            var count = styles.Count;
-
-            for (var i = 0; i < count; ++i)
-            {
-                var style = styles[i];
-                result.Add(style);
-                RecurseStyles(style.Children, result);
             }
         }
     }
