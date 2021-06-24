@@ -576,6 +576,7 @@ namespace Avalonia
             if (change.IsEffectiveValueChange)
             {
                 OnPropertyChanged(change);
+                change.Property.NotifyChanged(change);
                 _propertyChanged?.Invoke(this, change);
             }
         }
