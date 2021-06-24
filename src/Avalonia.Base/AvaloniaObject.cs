@@ -23,7 +23,7 @@ namespace Avalonia
         private List<IDisposable>? _directBindings;
         private PropertyChangedEventHandler? _inpcChanged;
         private EventHandler<AvaloniaPropertyChangedEventArgs>? _propertyChanged;
-        private Dictionary<AvaloniaProperty, object>? _observables;
+        private Dictionary<AvaloniaProperty, AvaloniaPropertyObservable>? _observables;
         private ValueStore _values;
 
         /// <summary>
@@ -73,8 +73,15 @@ namespace Avalonia
             set { this.Bind(binding.Property, value); }
         }
 
+        /// <summary>
+        /// Returns a value indicating whether the current thread is the UI thread.
+        /// </summary>
+        /// <returns>true if the current thread is the UI thread; otherwise false.</returns>
         public bool CheckAccess() => Dispatcher.UIThread.CheckAccess();
 
+        /// <summary>
+        /// Checks that the current thread is the UI thread and throws if not.
+        /// </summary>
         public void VerifyAccess() => Dispatcher.UIThread.VerifyAccess();
 
         /// <summary>
@@ -166,12 +173,33 @@ namespace Avalonia
         /// </remarks>
         public sealed override int GetHashCode() => base.GetHashCode();
 
+        /// <summary>
+        /// Gets an observable for an <see cref="AvaloniaProperty"/>.
+        /// </summary>
+        /// <param name="property">The property.</param>
+        /// <returns>
+        /// An observable which fires immediately with the current value of the property on the
+        /// object and subsequently each time the property value changes.
+        /// </returns>
         public IObservable<object?> GetObservable(AvaloniaProperty property)
         {
-            throw new NotImplementedException();
+            _ = property ?? throw new ArgumentNullException(nameof(property));
+            VerifyAccess();
+
+            if (_observables is object && _observables.TryGetValue(property, out var o))
+                return o;
+            return property.GetObservable(this);
         }
 
-        public IObservable<T> GetObservable<T>(AvaloniaProperty<T> property)
+        /// <summary>
+        /// Gets an observable for an <see cref="AvaloniaProperty"/>.
+        /// </summary>
+        /// <param name="property">The property.</param>
+        /// <returns>
+        /// An observable which fires immediately with the current value of the property on the
+        /// object and subsequently each time the property value changes.
+        /// </returns>
+        public IObservable<T?> GetObservable<T>(AvaloniaProperty<T> property)
         {
             _ = property ?? throw new ArgumentNullException(nameof(property));
             VerifyAccess();
@@ -179,15 +207,15 @@ namespace Avalonia
             _observables ??= new();
 
             if (_observables.TryGetValue(property, out var o))
-                return (IObservable<T>)o;
+                return (AvaloniaPropertyObservable<T>)o;
             else
             {
-                AvaloniaPropertyObservable<T> result;
-
-                if (property is StyledPropertyBase<T> styled)
-                    result = new AvaloniaPropertyObservable<T>(this, styled);
-                else
-                    result = new AvaloniaPropertyObservable<T>(this, (DirectPropertyBase<T>)property);
+                AvaloniaPropertyObservable<T> result = property switch
+                {
+                    StyledPropertyBase<T> styled => new StyledPropertyObservable<T>(this, styled),
+                    DirectPropertyBase<T> direct => new DirectPropertyObservable<T>(this, direct),
+                    _ => throw new NotSupportedException("Unsupported property type."),
+                };
 
                 _observables.Add(property, result);
                 return result;
@@ -714,7 +742,7 @@ namespace Avalonia
                 // observable causes a cascading change.
                 AvaloniaPropertyChangedEventArgsPool<T>.Release(e);
 
-                ((AvaloniaPropertyObservable<T?>)o).OnNext(value);
+                ((StyledPropertyObservable<T?>)o).OnNext(value);
             }
             else
             {

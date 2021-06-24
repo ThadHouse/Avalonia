@@ -156,6 +156,11 @@ namespace Avalonia.Base.UnitTests
                 throw new NotImplementedException();
             }
 
+            internal override IObservable<object> GetObservable(AvaloniaObject target)
+            {
+                throw new NotImplementedException();
+            }
+
             internal override object GetValue(AvaloniaObject target)
             {
                 throw new NotImplementedException();

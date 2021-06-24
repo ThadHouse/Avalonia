@@ -503,21 +503,18 @@ namespace Avalonia
             AvaloniaObject target,
             IObservable<object?> source,
             BindingPriority priority);
-
+        internal abstract IObservable<object?> GetObservable(AvaloniaObject target);
         internal abstract object? GetValue(AvaloniaObject target);
-
         internal abstract object? GetValueByPriority(
             AvaloniaObject target,
             BindingPriority minPriority,
             BindingPriority maxPriority);
-        
         internal abstract void RaisePropertyChanged(
             AvaloniaObject target,
             object? oldValue,
             object? newValue,
             BindingPriority priority,
             bool isEffectiveValueChange);
-        
         internal abstract void SetValue(AvaloniaObject target, object? value);
 
         private AvaloniaPropertyMetadata GetMetadataWithOverrides(Type type)

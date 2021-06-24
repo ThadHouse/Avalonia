@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Avalonia.Data;
 using Avalonia.PropertyStore;
+using Avalonia.Reactive;
 using Avalonia.Utilities;
 
 #nullable enable
@@ -186,6 +187,11 @@ namespace Avalonia
 
         /// <inheritdoc/>
         object? IStyledPropertyAccessor.GetDefaultValue(Type type) => GetDefaultBoxedValue(type);
+
+        internal override IObservable<object?> GetObservable(AvaloniaObject target)
+        {
+            return (AvaloniaPropertyObservable)target.GetObservable(this);
+        }
 
         internal override object? GetValue(AvaloniaObject target) => target.GetValue(this);
 

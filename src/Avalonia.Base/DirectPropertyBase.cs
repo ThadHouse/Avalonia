@@ -136,6 +136,11 @@ namespace Avalonia
             return target.Bind<TValue>(this, source);
         }
 
+        internal override IObservable<object?> GetObservable(AvaloniaObject target)
+        {
+            return (AvaloniaPropertyObservable)target.GetObservable(this);
+        }
+
         internal override object? GetValue(AvaloniaObject target) => target.GetValue(this);
 
         internal override object GetValueByPriority(
