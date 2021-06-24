@@ -632,7 +632,7 @@ namespace Avalonia.Controls.UnitTests.Primitives
         {
             public event EventHandler DataContextBeginUpdate;
 
-            public new IAvaloniaObject InheritanceParent => base.InheritanceParent;
+            public IAvaloniaObject InheritanceParent => base.GetInheritanceParent();
 
             protected override void OnDataContextBeginUpdate()
             {

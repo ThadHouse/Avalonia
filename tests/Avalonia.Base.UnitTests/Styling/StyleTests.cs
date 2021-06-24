@@ -25,7 +25,7 @@ namespace Avalonia.Base.UnitTests.Styling
 
             var target = new Class1();
 
-            style.TryAttach(target, null);
+            ((IStyleable)target).ApplyStyle(style);
 
             Assert.Equal("Foo", target.Foo);
         }
@@ -43,7 +43,7 @@ namespace Avalonia.Base.UnitTests.Styling
 
             var target = new Class1();
 
-            style.TryAttach(target, null);
+            ((IStyleable)target).ApplyStyle(style);
             Assert.Equal("foodefault", target.Foo);
             target.Classes.Add("foo");
             Assert.Equal("Foo", target.Foo);
@@ -64,7 +64,7 @@ namespace Avalonia.Base.UnitTests.Styling
 
             var target = new Class1();
 
-            style.TryAttach(target, target);
+            ((IStyleable)target).ApplyStyle(style);
 
             Assert.Equal("Foo", target.Foo);
         }
@@ -83,7 +83,7 @@ namespace Avalonia.Base.UnitTests.Styling
             var target = new Class1();
             var other = new Class1();
 
-            style.TryAttach(target, other);
+            ((IStyleable)target).ApplyStyle(style);
 
             Assert.Equal("foodefault", target.Foo);
         }
@@ -104,7 +104,7 @@ namespace Avalonia.Base.UnitTests.Styling
                 Foo = "Original",
             };
 
-            style.TryAttach(target, null);
+            ((IStyleable)target).ApplyStyle(style);
             Assert.Equal("Original", target.Foo);
         }
 
@@ -483,9 +483,7 @@ namespace Avalonia.Base.UnitTests.Styling
             };
 
             var target = new Class1();
-            target.BeginBatchUpdate();
-            styles.TryAttach(target, null);
-            target.EndBatchUpdate();
+            ((IStyleable)target).ApplyStyle(styles);
 
             Assert.NotNull(target.Child);
             Assert.Equal(1, instantiationCount);
@@ -509,7 +507,7 @@ namespace Avalonia.Base.UnitTests.Styling
                 Child = border = new Border(),
             };
 
-            style.TryAttach(border, null);
+            ((IStyleable)border).ApplyStyle(style);
 
             Assert.Equal(new Thickness(4), border.BorderThickness);
             root.Child = null;

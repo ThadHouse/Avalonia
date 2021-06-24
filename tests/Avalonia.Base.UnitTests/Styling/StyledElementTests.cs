@@ -322,24 +322,24 @@ namespace Avalonia.Base.UnitTests.Styling
             }
         }
 
-        [Fact]
-        public void StyleInstance_Is_Disposed_When_Control_Removed_From_Logical_Tree()
-        {
-            using (AvaloniaLocator.EnterScope())
-            {
-                var root = new TestRoot();
-                var child = new Border();
+        ////[Fact]
+        ////public void StyleInstance_Is_Disposed_When_Control_Removed_From_Logical_Tree()
+        ////{
+        ////    using (AvaloniaLocator.EnterScope())
+        ////    {
+        ////        var root = new TestRoot();
+        ////        var child = new Border();
 
-                root.Child = child;
+        ////        root.Child = child;
 
-                var styleInstance = new Mock<IStyleInstance>();
-                ((IStyleable)child).StyleApplied(styleInstance.Object);
+        ////        var styleInstance = new Mock<IStyleInstance>();
+        ////        ((IStyleable)child).StyleApplied(styleInstance.Object);
 
-                root.Child = null;
+        ////        root.Child = null;
 
-                styleInstance.Verify(x => x.Dispose(), Times.Once);
-            }
-        }
+        ////        styleInstance.Verify(x => x.Dispose(), Times.Once);
+        ////    }
+        ////}
 
         [Fact]
         public void EndInit_Should_Raise_Initialized()

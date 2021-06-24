@@ -133,6 +133,14 @@ namespace Avalonia
             }
         }
 
+        /// <summary>
+        /// Binds a property on an <see cref="IAvaloniaObject"/> to an <see cref="IObservable{T}"/>.
+        /// </summary>
+        /// <param name="target">The object.</param>
+        /// <param name="property">The property to bind.</param>
+        /// <param name="source">The binding source.</param>
+        /// <param name="priority">The binding priority.</param>
+        /// <returns>An <see cref="IDisposable"/> which can be used to cancel the binding.</returns>
         public static IDisposable Bind<T>(
             this IAvaloniaObject target,
             AvaloniaProperty<T> property,
@@ -150,17 +158,6 @@ namespace Avalonia
             }
 
             throw new NotSupportedException("Target is not an AvaloniaObject.");
-        }
-
-        /// <summary>
-        /// Gets a description of a property that van be used in observables.
-        /// </summary>
-        /// <param name="o">The object.</param>
-        /// <param name="property">The property</param>
-        /// <returns>The description.</returns>
-        private static string GetDescription(IAvaloniaObject o, AvaloniaProperty property)
-        {
-            return $"{o.GetType().Name}.{property.Name}";
         }
 
         [Obsolete("Use AvaloniaObject.GetValueByPriority")]
