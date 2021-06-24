@@ -226,7 +226,11 @@ namespace Avalonia
             VerifyAccess();
 
             var registered = AvaloniaPropertyRegistry.Instance.GetRegisteredDirect(this, property);
-            return registered.InvokeGetter(this);
+
+            if (registered is object)
+                return registered.InvokeGetter(this);
+            else
+                return property.GetUnsetValue(GetType());
         }
 
         /// <summary>
@@ -314,7 +318,12 @@ namespace Avalonia
             VerifyAccess();
 
             LogPropertySet(property, value, BindingPriority.LocalValue);
-            SetDirectValueUnchecked(property, value);
+            var p = AvaloniaPropertyRegistry.Instance.GetRegisteredDirect(this, property);
+
+            if (p is null)
+                throw new ArgumentException($"Property '{property.Name} not registered on '{GetType()}");
+
+            SetDirectValueUnchecked(p, value);
         }
 
         /// <summary>
@@ -408,7 +417,7 @@ namespace Avalonia
         /// </returns>
         public IDisposable Bind<T>(
             DirectPropertyBase<T> property,
-            IObservable<BindingValue<T>> source)
+            IObservable<object?> source)
         {
             property = property ?? throw new ArgumentNullException(nameof(property));
             source = source ?? throw new ArgumentNullException(nameof(source));
@@ -429,7 +438,40 @@ namespace Avalonia
 
             _directBindings ??= new List<IDisposable>();
 
-            return new DirectBindingSubscription<T>(this, property, source);
+            return new DirectBindingUntyped<T>(this, property, source);
+        }
+
+        /// <summary>
+        /// Binds a <see cref="AvaloniaProperty"/> to an observable.
+        /// </summary>
+        /// <typeparam name="T">The type of the property.</typeparam>
+        /// <param name="property">The property.</param>
+        /// <param name="source">The observable.</param>
+        /// <returns>
+        /// A disposable which can be used to terminate the binding.
+        /// </returns>
+        public IDisposable Bind<T>(
+            DirectPropertyBase<T> property,
+            IObservable<BindingValue<T>> source)
+        {
+            property = property ?? throw new ArgumentNullException(nameof(property));
+            source = source ?? throw new ArgumentNullException(nameof(source));
+            VerifyAccess();
+
+            property = AvaloniaPropertyRegistry.Instance.GetRegisteredDirect(this, property);
+
+            if (property.IsReadOnly)
+            {
+                throw new ArgumentException($"The property {property.Name} is readonly.");
+            }
+
+            Logger.TryGet(LogEventLevel.Verbose, LogArea.Property)?.Log(
+                this,
+                "Bound {Property} to {Binding} with priority LocalValue",
+                property,
+                GetDescription(source));
+
+            return new DirectBinding<T>(this, property, source);
         }
 
         /// <summary>
@@ -462,9 +504,7 @@ namespace Avalonia
                 property,
                 GetDescription(source));
 
-            _directBindings ??= new List<IDisposable>();
-
-            return new DirectBindingSubscription<T>(this, property, source);
+            return new DirectBinding<T>(this, property, source);
         }
 
         /// <summary>
@@ -631,16 +671,21 @@ namespace Avalonia
             return true;
         }
 
-        protected internal virtual int GetInheritanceChildCount() => 0;
-        protected internal virtual AvaloniaObject GetInheritanceChild(int index) => throw new IndexOutOfRangeException();
-        protected internal virtual AvaloniaObject? GetInheritanceParent() => null;
-        
-        internal ValueStore GetValueStore() => _values;
-
+        /// <summary>
+        /// Notifies the object of a change to the value of <see cref="GetInheritanceParent"/>.
+        /// </summary>
         protected void InheritanceParentChanged()
         {
             _values.InheritanceParentChanged(GetInheritanceParent()?._values);
         }
+
+        protected internal virtual int GetInheritanceChildCount() => 0;
+        protected internal virtual AvaloniaObject GetInheritanceChild(int index) => throw new IndexOutOfRangeException();
+        protected internal virtual AvaloniaObject? GetInheritanceParent() => null;
+
+        internal void AddDirectBinding(IDisposable binding) => (_directBindings ??= new()).Add(binding);
+        internal void RemoveDirectBinding(IDisposable binding) => _directBindings?.Remove(binding);
+        internal ValueStore GetValueStore() => _values;
 
         internal void RaisePropertyChanged<T>(
             AvaloniaProperty<T> property,
@@ -677,39 +722,20 @@ namespace Avalonia
             }
         }
 
-        /// <summary>
-        /// Sets the value of a direct property.
-        /// </summary>
-        /// <param name="property">The property.</param>
-        /// <param name="value">The value.</param>
-        private void SetDirectValueUnchecked<T>(DirectPropertyBase<T> property, T? value)
+        internal void SetDirectValueUnchecked<T>(DirectPropertyBase<T> property, T? value)
         {
-            var p = AvaloniaPropertyRegistry.Instance.GetRegisteredDirect(this, property);
-
             if (value is UnsetValueType)
             {
-                p.InvokeSetter(this, p.GetUnsetValue(GetType()));
+                property.InvokeSetter(this, property.GetUnsetValue(GetType()));
             }
             else if (!(value is DoNothingType))
             {
-                p.InvokeSetter(this, value);
+                property.InvokeSetter(this, value);
             }
         }
 
-        /// <summary>
-        /// Sets the value of a direct property.
-        /// </summary>
-        /// <param name="property">The property.</param>
-        /// <param name="value">The value.</param>
-        private void SetDirectValueUnchecked<T>(DirectPropertyBase<T> property, BindingValue<T> value)
+        internal void SetDirectValueUnchecked<T>(DirectPropertyBase<T> property, BindingValue<T> value)
         {
-            var p = AvaloniaPropertyRegistry.Instance.FindRegisteredDirect(this, property);
-
-            if (p == null)
-            {
-                throw new ArgumentException($"Property '{property.Name} not registered on '{this.GetType()}");
-            }
-
             LogIfError(property, value);
 
             switch (value.Type)
@@ -729,7 +755,7 @@ namespace Avalonia
                     break;
             }
 
-            var metadata = p.GetMetadata(GetType());
+            var metadata = property.GetMetadata(GetType());
 
             if (metadata.EnableDataValidation == true)
             {
@@ -785,80 +811,6 @@ namespace Avalonia
                 property,
                 value,
                 priority);
-        }
-
-        private class DirectBindingSubscription<T> : IObserver<BindingValue<T>>, IObserver<T>, IDisposable
-        {
-            private readonly AvaloniaObject _owner;
-            private readonly DirectPropertyBase<T> _property;
-            private readonly IDisposable _subscription;
-
-            public DirectBindingSubscription(
-                AvaloniaObject owner,
-                DirectPropertyBase<T> property,
-                IObservable<BindingValue<T>> source)
-            {
-                _owner = owner;
-                _property = property;
-                _owner._directBindings!.Add(this);
-                _subscription = source.Subscribe(this);
-            }
-
-            public DirectBindingSubscription(
-                AvaloniaObject owner,
-                DirectPropertyBase<T> property,
-                IObservable<T> source)
-            {
-                _owner = owner;
-                _property = property;
-                _owner._directBindings!.Add(this);
-                _subscription = source.Subscribe(this);
-            }
-
-            public void Dispose()
-            {
-                _subscription.Dispose();
-                _owner._directBindings!.Remove(this);
-            }
-
-            public void OnCompleted() => Dispose();
-            public void OnError(Exception error) => Dispose();
-
-            public void OnNext(T value)
-            {
-                if (Dispatcher.UIThread.CheckAccess())
-                {
-                    _owner.SetDirectValueUnchecked(_property, value);
-                }
-                else
-                {
-                    // To avoid allocating closure in the outer scope we need to capture variables
-                    // locally. This allows us to skip most of the allocations when on UI thread.
-                    var instance = _owner;
-                    var property = _property;
-                    var newValue = value;
-
-                    Dispatcher.UIThread.Post(() => instance.SetDirectValueUnchecked(property, newValue));
-                }
-            }
-
-            public void OnNext(BindingValue<T> value)
-            {
-                if (Dispatcher.UIThread.CheckAccess())
-                {
-                    _owner.SetDirectValueUnchecked(_property, value);
-                }
-                else
-                {
-                    // To avoid allocating closure in the outer scope we need to capture variables
-                    // locally. This allows us to skip most of the allocations when on UI thread.
-                    var instance = _owner;
-                    var property = _property;
-                    var newValue = value;
-
-                    Dispatcher.UIThread.Post(() => instance.SetDirectValueUnchecked(property, newValue));
-                }
-            }
         }
     }
 }

@@ -131,7 +131,9 @@ namespace Avalonia
 
         internal override IDisposable Bind(AvaloniaObject target, IObservable<object?> source, BindingPriority priority)
         {
-            return target.Bind(this, source, priority);
+            if (priority != BindingPriority.LocalValue)
+                throw new NotSupportedException("Cannot bind a direct property with non-LocalValue priority.");
+            return target.Bind<TValue>(this, source);
         }
 
         internal override object? GetValue(AvaloniaObject target) => target.GetValue(this);

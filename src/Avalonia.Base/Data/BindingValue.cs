@@ -236,18 +236,32 @@ namespace Avalonia.Data
 
         /// <summary>
         /// Creates a <see cref="BindingValue{T}"/> from an object, handling the special values
-        /// <see cref="AvaloniaProperty.UnsetValue"/> and <see cref="BindingOperations.DoNothing"/>.
+        /// <see cref="AvaloniaProperty.UnsetValue"/> and <see cref="BindingOperations.DoNothing"/>, and
+        /// producing <see cref="BindingValue{T}"/> with an error if the value could not be converted to
+        /// <typeparamref name="T"/>.
         /// </summary>
         /// <param name="value">The untyped value.</param>
         /// <returns>The typed binding value.</returns>
         public static BindingValue<T> FromUntyped(object? value)
         {
+            static BindingValue<T> CastValueOrError(object? value)
+            {
+                try
+                {
+                    return new BindingValue<T>((T?)value);
+                }
+                catch (Exception e)
+                {
+                    return new BindingValue<T>(BindingValueType.BindingError, default, e);
+                }
+            }
+
             return value switch
             {
                 UnsetValueType _ => Unset,
                 DoNothingType _ => DoNothing,
                 BindingNotification n => n.ToBindingValue().Cast<T>(),
-                _ => new BindingValue<T>((T)value)
+                _ => CastValueOrError(value),
             };
         }
 
