@@ -49,7 +49,12 @@ namespace Avalonia.Markup.Xaml.UnitTests
                     }
                 };
 
-                setter.Instance(control).Start(false);
+                var style = new Style(x => x.OfType<Control>())
+                {
+                    Setters = { setter },
+                };
+
+                ((IStyleable)control).ApplyStyle(style);
                 Assert.Equal("foo", control.Text);
 
                 control.Text = "bar";
