@@ -199,12 +199,7 @@ namespace Avalonia
         /// </summary>
         /// <param name="property">The property.</param>
         /// <returns>The value.</returns>
-        public object? GetValue(AvaloniaProperty property)
-        {
-            _ = property ?? throw new ArgumentNullException(nameof(property));
-            VerifyAccess();
-            return _values.GetValue(property);
-        }
+        public object? GetValue(AvaloniaProperty property) => property.GetValue(this);
 
         /// <summary>
         /// Gets a <see cref="AvaloniaProperty"/> value.

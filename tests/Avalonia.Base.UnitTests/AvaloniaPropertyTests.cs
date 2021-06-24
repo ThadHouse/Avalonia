@@ -156,6 +156,11 @@ namespace Avalonia.Base.UnitTests
                 throw new NotImplementedException();
             }
 
+            internal override object GetValue(AvaloniaObject target)
+            {
+                throw new NotImplementedException();
+            }
+
             internal override object GetValueByPriority(AvaloniaObject target, BindingPriority minPriority, BindingPriority maxPriority)
             {
                 throw new NotImplementedException();

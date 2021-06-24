@@ -504,7 +504,9 @@ namespace Avalonia
             IObservable<object?> source,
             BindingPriority priority);
 
-        internal abstract object GetValueByPriority(
+        internal abstract object? GetValue(AvaloniaObject target);
+
+        internal abstract object? GetValueByPriority(
             AvaloniaObject target,
             BindingPriority minPriority,
             BindingPriority maxPriority);

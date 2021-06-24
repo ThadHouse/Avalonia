@@ -187,6 +187,8 @@ namespace Avalonia
         /// <inheritdoc/>
         object? IStyledPropertyAccessor.GetDefaultValue(Type type) => GetDefaultBoxedValue(type);
 
+        internal override object? GetValue(AvaloniaObject target) => target.GetValue(this);
+
         internal override object GetValueByPriority(
             AvaloniaObject o,
             BindingPriority minPriority,

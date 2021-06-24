@@ -134,6 +134,8 @@ namespace Avalonia
             return target.Bind(this, source, priority);
         }
 
+        internal override object? GetValue(AvaloniaObject target) => target.GetValue(this);
+
         internal override object GetValueByPriority(
             AvaloniaObject avaloniaObject,
             BindingPriority minPriority,
@@ -144,7 +146,10 @@ namespace Avalonia
 
         internal override void SetValue(AvaloniaObject target, object? value)
         {
-            target.SetValue<TValue?>(this, (TValue?)value);
+            if (value == UnsetValue)
+                target.ClearValue(this);
+            else if (value != BindingOperations.DoNothing)
+                target.SetValue<TValue?>(this, (TValue?)value);
         }
     }
 }
