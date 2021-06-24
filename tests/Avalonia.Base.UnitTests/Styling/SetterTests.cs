@@ -27,13 +27,13 @@ namespace Avalonia.Base.UnitTests.Styling
             var control = new TextBlock();
             var subject = new BehaviorSubject<object>("foo");
             var descriptor = InstancedBinding.OneWay(subject);
-            var binding = Mock.Of<IBinding>(x => x.Initiate(control, TextBlock.TextProperty, null, false) == descriptor);
+            var binding = Mock.Of<IBinding>(x => x.Initiate(control, TextBlock.TagProperty, null, false) == descriptor);
             var style = Mock.Of<IStyle>();
-            var setter = new Setter(TextBlock.TextProperty, binding);
+            var setter = new Setter(TextBlock.TagProperty, binding);
 
             Apply(setter, control);
 
-            Assert.Equal("foo", control.Text);
+            Assert.Equal("foo", control.Tag);
         }
 
         [Fact]
@@ -154,7 +154,7 @@ namespace Avalonia.Base.UnitTests.Styling
 
         private void Apply(Setter setter, Control control)
         {
-            var style = new Style(x => x.OfType<Control>())
+            var style = new Style(x => x.Is<Control>())
             {
                 Setters = { setter },
             };

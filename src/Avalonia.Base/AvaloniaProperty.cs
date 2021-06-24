@@ -449,9 +449,9 @@ namespace Avalonia
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>True if the value is valid, otherwise false.</returns>
-        public bool IsValidValue(object value)
+        public bool IsValidValue(object? value)
         {
-            return TypeUtilities.TryConvertImplicit(PropertyType, value, out value);
+            return TypeUtilities.TryConvertImplicit(PropertyType, value, out _);
         }
 
         /// <summary>

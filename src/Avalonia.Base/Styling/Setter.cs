@@ -17,6 +17,8 @@ namespace Avalonia.Styling
     /// </remarks>
     public class Setter : IValueStoreSetter, IValueEntry, IAnimationSetter
     {
+        private object? _value;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Setter"/> class.
         /// </summary>
@@ -43,11 +45,18 @@ namespace Avalonia.Styling
         /// <summary>
         /// Gets or sets the property value.
         /// </summary>
-        /// [Content]
+        [Content]
         [AssignBinding]
         [DependsOn(nameof(Property))]
-        [Content]
-        public object? Value { get; set; }
+        public object? Value
+        {
+            get => _value;
+            set
+            {
+                (value as ISetterValue)?.Initialize(this);
+                _value = value;
+            }
+        }
 
         bool IValueEntry.HasValue => true;
         AvaloniaProperty IValueEntry.Property => EnsureProperty();
@@ -59,6 +68,10 @@ namespace Avalonia.Styling
             if (Value is IBinding binding)
             {
                 return new SetterBindingInstance(instance, Property, binding);
+            }
+            else if (Value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(Property.PropertyType))
+            {
+                throw new NotImplementedException();
             }
             else
             {
