@@ -46,6 +46,7 @@ namespace Avalonia.Styling
         /// [Content]
         [AssignBinding]
         [DependsOn(nameof(Property))]
+        [Content]
         public object? Value { get; set; }
 
         bool IValueEntry.HasValue => true;
