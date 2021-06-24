@@ -106,7 +106,7 @@ namespace Avalonia.Styling
                 return _sharedInstance;
 
             var instance = new StyleInstance(match.Value.Activator);
-            var canInstanceInPlace = true;
+            var canShareInstance = match.Value.Activator is null;
 
             if (_setters is object)
             {
@@ -116,12 +116,12 @@ namespace Avalonia.Styling
                     {
                         var setterInstance = v.Instance(instance, target);
                         instance.Add(setterInstance);
-                        canInstanceInPlace &= setterInstance == setter;
+                        canShareInstance &= setterInstance == setter;
                     }
                 }
             }
 
-            if (canInstanceInPlace)
+            if (canShareInstance)
                 _sharedInstance = instance;
 
             return instance;
