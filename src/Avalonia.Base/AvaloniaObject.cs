@@ -253,12 +253,20 @@ namespace Avalonia
             _ = property ?? throw new ArgumentNullException(nameof(property));
             VerifyAccess();
 
-            var registered = AvaloniaPropertyRegistry.Instance.GetRegisteredDirect(this, property);
+            var registered = AvaloniaPropertyRegistry.Instance.FindRegisteredDirect(this, property);
 
             if (registered is object)
+            {
                 return registered.InvokeGetter(this);
+            }
             else
+            {
+                Logger.TryGet(LogEventLevel.Warning, LogArea.Property)?.Log(
+                    "The direct property {Property} is not registered on {Type} and will always return the default value.",
+                    property.Name,
+                    GetType());
                 return property.GetUnsetValue(GetType());
+            }
         }
 
         /// <summary>

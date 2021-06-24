@@ -67,11 +67,11 @@ namespace Avalonia.Styling
 
             if (Value is IBinding binding)
             {
-                return new SetterBindingInstance(instance, Property, binding);
+                return new PropertySetterBindingInstance(instance, Property, binding);
             }
             else if (Value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(Property.PropertyType))
             {
-                throw new NotImplementedException();
+                return new PropertySetterTemplateInstance(Property, template);
             }
             else
             {

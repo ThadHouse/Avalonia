@@ -1,12 +1,13 @@
 ﻿using System;
 using Avalonia.Data;
+using Avalonia.Logging;
 using Avalonia.PropertyStore;
 
 #nullable enable
 
 namespace Avalonia.Styling
 {
-    internal class SetterBindingInstance : IValueEntry, IObserver<object?>
+    internal class PropertySetterBindingInstance : IValueEntry, IObserver<object?>
     {
         private static readonly object s_finished = new object();
         private readonly StyleInstance _owner;
@@ -14,7 +15,7 @@ namespace Avalonia.Styling
         private InstancedBinding? _instancedBinding;
         private object? _value = AvaloniaProperty.UnsetValue;
 
-        public SetterBindingInstance(StyleInstance owner, AvaloniaProperty property, IBinding binding)
+        public PropertySetterBindingInstance(StyleInstance owner, AvaloniaProperty property, IBinding binding)
         {
             _owner = owner;
             _binding = binding;
@@ -52,28 +53,22 @@ namespace Avalonia.Styling
 
         void IObserver<object?>.OnError(Exception error)
         {
-            //TODO: Log error
+            Logger.TryGet(LogEventLevel.Error, LogArea.Property)?.Log(this, "Binding error {Error}", error);
             _value = s_finished;
         }
 
         void IObserver<object?>.OnNext(object? value)
         {
-#if !BOXING
             var oldValue = _value;
-#endif
             _value = value;
-#if BOXING
-            _owner.ValueStore?.ValueChanged(_owner, Property);
-#else
             _owner.ValueStore?.ValueChanged(_owner, this, oldValue);
-#endif
         }
 
         private void StartIfNecessary()
         {
             if (_instancedBinding is null)
             {
-                _instancedBinding = _binding.Initiate(_owner.ValueStore.Owner, Property);
+                _instancedBinding = _binding.Initiate(_owner.ValueStore!.Owner, Property);
                 _instancedBinding.Observable.Subscribe(this);
             }
         }

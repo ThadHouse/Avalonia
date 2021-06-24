@@ -23,7 +23,7 @@ namespace Avalonia.PropertyStore
             return _values.TryGetValue(property.Id, out value);
         }
 
-        protected void Add(IValueEntry value) => _values.Add(value.Property.Id, value);
+        protected void Add(IValueEntry value) => _values[value.Property.Id] = value;
         protected bool Remove(AvaloniaProperty property) => _values.Remove(property.Id);
         protected void Set(IValueEntry value) => _values[value.Property.Id] = value;
     }

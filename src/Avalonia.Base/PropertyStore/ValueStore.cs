@@ -674,8 +674,16 @@ namespace Avalonia.PropertyStore
             if (priority > BindingPriority.Animation)
                 _nonAnimatedValues?.Remove(property.Id);
 
-            ((IValueEntry<T>)value).TryGetValue(out var result);
-            return result;
+            if (value is IValueEntry<T> typed)
+            {
+                typed.TryGetValue(out var result);
+                return result;
+            }
+            else
+            {
+                value.TryGetValue(out var result);
+                return (T?)result;
+            }
         }
 
         private void ClearEffectiveValue(AvaloniaProperty property)
