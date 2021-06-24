@@ -576,11 +576,12 @@ namespace Avalonia
         /// Called when a avalonia property changes on the object.
         /// </summary>
         /// <param name="change">The property change details.</param>
-        protected virtual void OnPropertyChangedCore<T>(AvaloniaPropertyChangedEventArgs<T> change)
+        private protected virtual void OnPropertyChangedCore<T>(AvaloniaPropertyChangedEventArgs<T> change)
         {
             if (change.IsEffectiveValueChange)
             {
                 OnPropertyChanged(change);
+                _propertyChanged?.Invoke(this, change);
             }
         }
 

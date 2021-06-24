@@ -87,7 +87,7 @@ namespace Avalonia.Animation
             }
         }
 
-        protected sealed override void OnPropertyChangedCore<T>(AvaloniaPropertyChangedEventArgs<T> change)
+        private protected override void OnPropertyChangedCore<T>(AvaloniaPropertyChangedEventArgs<T> change)
         {
             if (change.Property == TransitionsProperty && change.IsEffectiveValueChange)
             {
