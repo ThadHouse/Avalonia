@@ -2,6 +2,7 @@ using Avalonia.Styling;
 using System;
 using Avalonia.Controls;
 using System.Collections.Generic;
+using System.Collections;
 
 #nullable enable
 
@@ -10,10 +11,10 @@ namespace Avalonia.Markup.Xaml.Styling
     /// <summary>
     /// Includes a style from a URL.
     /// </summary>
-    public class StyleInclude : IStyle, IResourceProvider
+    public class StyleInclude : IStyle, IResourceProvider, IEnumerable<IStyle>
     {
         private readonly Uri _baseUri;
-        private IStyle[]? _loaded;
+        private IStyle? _loaded;
         private bool _isLoading;
 
         /// <summary>
@@ -51,12 +52,11 @@ namespace Avalonia.Markup.Xaml.Styling
                 if (_loaded == null)
                 {
                     _isLoading = true;
-                    var loaded = (IStyle)AvaloniaXamlLoader.Load(Source, _baseUri);
-                    _loaded = new[] { loaded };
+                    _loaded = (IStyle)AvaloniaXamlLoader.Load(Source, _baseUri);
                     _isLoading = false;
                 }
 
-                return _loaded?[0]!;
+                return _loaded;
             }
         }
 
@@ -93,5 +93,15 @@ namespace Avalonia.Markup.Xaml.Styling
 
         void IResourceProvider.AddOwner(IResourceHost owner) => (Loaded as IResourceProvider)?.AddOwner(owner);
         void IResourceProvider.RemoveOwner(IResourceHost owner) => (Loaded as IResourceProvider)?.RemoveOwner(owner);
+
+        IEnumerator<IStyle> IEnumerable<IStyle>.GetEnumerator()
+        {
+            return ((IEnumerable<IStyle>)new[] { Loaded }).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return new[] { Loaded }.GetEnumerator();
+        }
     }
 }
