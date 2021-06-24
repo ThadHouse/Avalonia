@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 #nullable enable
@@ -56,18 +57,52 @@ namespace Avalonia.Reactive
 
         public void PublishNext(T value)
         {
-            object? boxed = null;
-            var hasBoxed = false;
+            if (_observers.Count == 0)
+                return;
 
-            foreach (var observer in _observers)
+            if (_observers.Count == 1)
             {
+                var observer = _observers[0];
+
                 if (observer is IObserver<T> typed)
                     typed.OnNext(value);
                 else
+                    ((IObserver<object?>)observer).OnNext(value);
+            }
+            else
+            {
+                object? boxed = null;
+                var hasBoxed = false;
+                var count = _observers.Count;
+                var o = ArrayPool<object>.Shared.Rent(count);
+
+                try
                 {
-                    if (!hasBoxed)
-                        boxed = value;
-                    ((IObserver<object?>)observer).OnNext(boxed);
+                    _observers.CopyTo(o);
+
+                    for (var i = 0; i < count; ++i)
+                    {
+                        var observer = o[i];
+
+                        if (observer is IObserver<T> typed)
+                        {
+                            typed.OnNext(value);
+                        }
+                        else
+                        {
+                            if (!hasBoxed)
+                            {
+                                boxed = value;
+                                hasBoxed = true;
+                            }
+
+                            ((IObserver<object?>)observer).OnNext(boxed);
+                        }
+                    }
+                }
+                finally
+                {
+                    ArrayPool<object>.Shared.Return(o);
                 }
             }
         }

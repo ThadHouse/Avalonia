@@ -746,7 +746,7 @@ namespace Avalonia
                 // observable causes a cascading change.
                 AvaloniaPropertyChangedEventArgsPool<T>.Release(e);
 
-                ((StyledPropertyObservable<T?>)o).OnNext(value);
+                ((AvaloniaPropertyObservable<T?>)o).PublishNext(value);
             }
             else
             {
