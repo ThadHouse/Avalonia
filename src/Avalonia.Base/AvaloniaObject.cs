@@ -248,7 +248,7 @@ namespace Avalonia
         /// <typeparam name="T">The type of the property.</typeparam>
         /// <param name="property">The property.</param>
         /// <returns>The value.</returns>
-        public T GetValue<T>(DirectPropertyBase<T> property)
+        public T? GetValue<T>(DirectPropertyBase<T> property)
         {
             _ = property ?? throw new ArgumentNullException(nameof(property));
             VerifyAccess();
@@ -428,7 +428,7 @@ namespace Avalonia
         /// </returns>
         public IDisposable Bind<T>(
             StyledPropertyBase<T> property,
-            IObservable<T> source,
+            IObservable<T?> source,
             BindingPriority priority = BindingPriority.LocalValue)
         {
             property = property ?? throw new ArgumentNullException(nameof(property));
