@@ -105,19 +105,17 @@ namespace Avalonia.Styling
             if (_sharedInstance is object)
                 return _sharedInstance;
 
-            var instance = new StyleInstance(match.Value.Activator);
+            var instance = new StyleInstance(this, match.Value.Activator);
             var canShareInstance = match.Value.Activator is null;
 
             if (_setters is object)
             {
                 foreach (var setter in _setters)
                 {
-                    if (setter is IValueStoreSetter v)
-                    {
-                        var setterInstance = v.Instance(instance, target);
-                        instance.Add(setterInstance);
-                        canShareInstance &= setterInstance == setter;
-                    }
+                    var setterInstance = setter.Instance(instance, target);
+                    if (setterInstance is IValueEntry valueEntry)
+                        instance.Add(valueEntry);
+                    canShareInstance &= setterInstance == setter;
                 }
             }
 

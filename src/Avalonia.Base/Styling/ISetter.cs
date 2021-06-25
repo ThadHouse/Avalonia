@@ -2,5 +2,6 @@
 {
     public interface ISetter
     {
+        ISetterInstance Instance(IStyleInstance styleInstance, IStyleable target);
     }
 }

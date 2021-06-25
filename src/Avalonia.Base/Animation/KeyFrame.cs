@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Avalonia.Collections;
 using Avalonia.Metadata;
+using Avalonia.Styling;
 
 namespace Avalonia.Animation
 {
@@ -29,7 +30,7 @@ namespace Avalonia.Animation
         /// Gets the setters of <see cref="KeyFrame"/>.
         /// </summary>
         [Content]
-        public AvaloniaList<IAnimationSetter> Setters { get; } = new AvaloniaList<IAnimationSetter>();
+        public AvaloniaList<IPropertySetter> Setters { get; } = new AvaloniaList<IPropertySetter>();
 
         internal KeyFrameTimingMode TimingMode { get; private set; }
 

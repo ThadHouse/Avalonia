@@ -9,6 +9,7 @@ using Avalonia.Animation.Easings;
 using Avalonia.Collections;
 using Avalonia.Data;
 using Avalonia.Metadata;
+using Avalonia.Styling;
 
 namespace Avalonia.Animation
 {
@@ -195,14 +196,14 @@ namespace Avalonia.Animation
         public KeyFrames Children { get; } = new KeyFrames();
 
         // Store values for the Animator attached properties for IAnimationSetter objects.
-        private static readonly Dictionary<IAnimationSetter, Type> s_animators = new Dictionary<IAnimationSetter, Type>();
+        private static readonly Dictionary<IPropertySetter, Type> s_animators = new Dictionary<IPropertySetter, Type>();
 
         /// <summary>
         /// Gets the value of the Animator attached property for a setter.
         /// </summary>
         /// <param name="setter">The animation setter.</param>
         /// <returns>The property animator type.</returns>
-        public static Type GetAnimator(IAnimationSetter setter)
+        public static Type GetAnimator(IPropertySetter setter)
         {
             if (s_animators.TryGetValue(setter, out var type))
             {
@@ -216,7 +217,7 @@ namespace Avalonia.Animation
         /// </summary>
         /// <param name="setter">The animation setter.</param>
         /// <param name="value">The property animator value.</param>
-        public static void SetAnimator(IAnimationSetter setter, Type value)
+        public static void SetAnimator(IPropertySetter setter, Type value)
         {
             s_animators[setter] = value;
         }

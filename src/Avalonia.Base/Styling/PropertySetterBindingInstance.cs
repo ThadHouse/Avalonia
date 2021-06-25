@@ -7,7 +7,7 @@ using Avalonia.PropertyStore;
 
 namespace Avalonia.Styling
 {
-    internal class PropertySetterBindingInstance : IValueEntry, IObserver<object?>
+    internal class PropertySetterBindingInstance : IValueEntry, ISetterInstance, IObserver<object?>
     {
         private static readonly object s_finished = new object();
         private readonly StyleInstance _owner;

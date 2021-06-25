@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Avalonia.Animation.Animators;
 using Avalonia.Data;
 using Avalonia.Reactive;
+using Avalonia.Styling;
 
 namespace Avalonia.Animation
 {
@@ -48,7 +49,7 @@ namespace Avalonia.Animation
             set => SetAndRaise(ValueProperty, ref _value, value);
         }
 
-        public IDisposable BindSetter(IAnimationSetter setter, Animatable targetControl)
+        public IDisposable BindSetter(IPropertySetter setter, Animatable targetControl)
         {
             Property = setter.Property;
             var value = setter.Value;

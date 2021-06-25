@@ -15,7 +15,7 @@ namespace Avalonia.Styling
     /// A <see cref="Setter"/> is used to set a <see cref="AvaloniaProperty"/> value on a
     /// <see cref="AvaloniaObject"/> depending on a condition.
     /// </remarks>
-    public class Setter : IValueStoreSetter, IValueEntry, IAnimationSetter
+    public class Setter : ISetter, IValueEntry, ISetterInstance, IPropertySetter
     {
         private object? _value;
 
@@ -61,13 +61,13 @@ namespace Avalonia.Styling
         bool IValueEntry.HasValue => true;
         AvaloniaProperty IValueEntry.Property => EnsureProperty();
 
-        IValueEntry IValueStoreSetter.Instance(StyleInstance instance, IStyleable target)
+        ISetterInstance ISetter.Instance(IStyleInstance instance, IStyleable target)
         {
             _ = Property ?? throw new InvalidOperationException("Setter.Property must be set.");
 
             if (Value is IBinding binding)
             {
-                return new PropertySetterBindingInstance(instance, Property, binding);
+                return new PropertySetterBindingInstance((StyleInstance)instance, Property, binding);
             }
             else if (Value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(Property.PropertyType))
             {

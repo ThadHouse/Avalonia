@@ -65,7 +65,6 @@ namespace Avalonia
         private IResourceDictionary? _resources;
         private Styles? _styles;
         private bool _styled;
-        private List<IStyleInstance>? _appliedStyles;
         private ITemplatedControl? _templatedParent;
         private bool _dataContextUpdating;
 
@@ -371,14 +370,15 @@ namespace Avalonia
 
         internal StyleDiagnostics GetStyleDiagnosticsInternal()
         {
-            IReadOnlyList<IStyleInstance>? appliedStyles = _appliedStyles;
+            throw new NotImplementedException();
+            //IReadOnlyList<IStyleInstance>? appliedStyles = _appliedStyles;
 
-            if (appliedStyles is null)
-            {
-                appliedStyles = Array.Empty<IStyleInstance>();
-            }
+            //if (appliedStyles is null)
+            //{
+            //    appliedStyles = Array.Empty<IStyleInstance>();
+            //}
 
-            return new StyleDiagnostics(appliedStyles);
+            //return new StyleDiagnostics(appliedStyles);
         }
 
         /// <inheritdoc/>
@@ -763,32 +763,6 @@ namespace Avalonia
             ////_styled = false;
         }
 
-        private void DetachStyles(IReadOnlyList<IStyle> styles)
-        {
-            styles = styles ?? throw new ArgumentNullException(nameof(styles));
-
-            if (_appliedStyles is null)
-            {
-                return;
-            }
-
-            var count = styles.Count;
-
-            for (var i = 0; i < count; ++i)
-            {
-                for (var j = _appliedStyles.Count - 1; j >= 0; --j)
-                {
-                    var applied = _appliedStyles[j];
-
-                    if (applied.Source == styles[i])
-                    {
-                        applied.Dispose();
-                        _appliedStyles.RemoveAt(j);
-                    }
-                }
-            }
-        }
-
         private void InvalidateStylesOnThisAndDescendents()
         {
             InvalidateStyles();
@@ -800,21 +774,6 @@ namespace Avalonia
                 for (var i = 0; i < childCount; ++i)
                 {
                     (_logicalChildren[i] as StyledElement)?.InvalidateStylesOnThisAndDescendents();
-                }
-            }
-        }
-
-        private void DetachStylesFromThisAndDescendents(IReadOnlyList<IStyle> styles)
-        {
-            DetachStyles(styles);
-
-            if (_logicalChildren is object)
-            {
-                var childCount = _logicalChildren.Count;
-
-                for (var i = 0; i < childCount; ++i)
-                {
-                    (_logicalChildren[i] as StyledElement)?.DetachStylesFromThisAndDescendents(styles);
                 }
             }
         }

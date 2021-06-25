@@ -4,7 +4,7 @@
 
 namespace Avalonia.Styling
 {
-    internal class PropertySetterTemplateInstance : IValueEntry
+    internal class PropertySetterTemplateInstance : IValueEntry, ISetterInstance
     {
         private readonly ITemplate _template;
         private object? _value;
@@ -16,7 +16,6 @@ namespace Avalonia.Styling
         }
 
         public bool HasValue => true;
-
         public AvaloniaProperty Property { get; }
 
         public bool TryGetValue(out object? value)
