@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Data;
 
@@ -23,7 +24,12 @@ namespace Avalonia.PropertyStore
             return _values.TryGetValue(property.Id, out value);
         }
 
-        protected void Add(IValueEntry value) => _values[value.Property.Id] = value;
+        protected void Add(IValueEntry value)
+        {
+            Debug.Assert(!value.Property.IsDirect);
+            _values[value.Property.Id] = value;
+        }
+
         protected bool Remove(AvaloniaProperty property) => _values.Remove(property.Id);
         protected void Set(IValueEntry value) => _values[value.Property.Id] = value;
     }

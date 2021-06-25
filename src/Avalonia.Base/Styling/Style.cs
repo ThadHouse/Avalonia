@@ -113,8 +113,7 @@ namespace Avalonia.Styling
                 foreach (var setter in _setters)
                 {
                     var setterInstance = setter.Instance(instance, target);
-                    if (setterInstance is IValueEntry valueEntry)
-                        instance.Add(valueEntry);
+                    instance.Add(setterInstance);
                     canShareInstance &= setterInstance == setter;
                 }
             }

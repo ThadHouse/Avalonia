@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Avalonia.Styling
 {
-    internal class DirectPropertySetterInstance : ISetterInstance
+    internal class DirectPropertySetterBindingInstance : ISetterInstance
     {
     }
 }

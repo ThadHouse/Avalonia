@@ -64,6 +64,76 @@ namespace Avalonia.Base.UnitTests.Styling
             Assert.IsType<Canvas>(control.Child);
         }
 
+        [Fact]
+        public void Can_Set_Direct_Property_In_Style_Without_Activator()
+        {
+            var control = new TextBlock();
+            var target = new Setter();
+            var style = new Style(x => x.Is<TextBlock>())
+            {
+                Setters =
+                {
+                    new Setter(TextBlock.TextProperty, "foo"),
+                }
+            };
+
+            ((IStyleable)control).ApplyStyle(style);
+
+            Assert.Equal("foo", control.Text);
+        }
+
+        [Fact]
+        public void Can_Set_Direct_Property_Binding_In_Style_Without_Activator()
+        {
+            var control = new TextBlock();
+            var target = new Setter();
+            var source = new BehaviorSubject<object?>("foo");
+            var style = new Style(x => x.Is<TextBlock>())
+            {
+                Setters =
+                {
+                    new Setter(TextBlock.TextProperty, source.ToBinding()),
+                }
+            };
+
+            ((IStyleable)control).ApplyStyle(style);
+
+            Assert.Equal("foo", control.Text);
+        }
+
+        [Fact]
+        public void Cannot_Set_Direct_Property_Binding_In_Style_With_Activator()
+        {
+            var control = new TextBlock();
+            var target = new Setter();
+            var source = new BehaviorSubject<object?>("foo");
+            var style = new Style(x => x.Is<TextBlock>().Class("foo"))
+            {
+                Setters =
+                {
+                    new Setter(TextBlock.TextProperty, source.ToBinding()),
+                }
+            };
+
+            Assert.Throws<InvalidOperationException>(() => ((IStyleable)control).ApplyStyle(style));
+        }
+
+        [Fact]
+        public void Cannot_Set_Direct_Property_In_Style_With_Activator()
+        {
+            var control = new TextBlock();
+            var target = new Setter();
+            var style = new Style(x => x.Is<TextBlock>().Class("foo"))
+            {
+                Setters =
+                {
+                    new Setter(TextBlock.TextProperty, "foo"),
+                }
+            };
+
+            Assert.Throws<InvalidOperationException>(() => ((IStyleable)control).ApplyStyle(style));
+        }
+
         //[Fact]
         //public void Does_Not_Call_Converter_ConvertBack_On_OneWay_Binding()
         //{

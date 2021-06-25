@@ -23,15 +23,5 @@ namespace Avalonia.Styling
             value = _value ??= _template.Build();
             return value != AvaloniaProperty.UnsetValue;
         }
-
-        void ISetterInstance.Activate(IStyleable target)
-        {
-            // No implementation needed here: this method is only needed by non-IValueEntry setter instances.
-        }
-
-        void ISetterInstance.Dectivate(IStyleable target)
-        {
-            // No implementation needed here: this method is only needed by non-IValueEntry setter instances.
-        }
     }
 }

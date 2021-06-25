@@ -1,4 +1,5 @@
-﻿using Avalonia.Data;
+﻿using System.Collections.Generic;
+using Avalonia.Data;
 using Avalonia.PropertyStore;
 using Avalonia.Styling.Activators;
 
@@ -19,6 +20,7 @@ namespace Avalonia.Styling
     internal class StyleInstance : ValueFrameBase, IStyleInstance, IStyleActivatorSink
     {
         private readonly IStyleActivator? _activator;
+        private List<ISetterInstance>? _setters;
         private bool _isActivatorSubscribed;
         private bool _isActive;
 
@@ -50,7 +52,14 @@ namespace Avalonia.Styling
         public IStyle Source { get; }
         public ValueStore? ValueStore { get; private set; }
 
-        public new void Add(IValueEntry value) => base.Add(value);
+        public void Add(ISetterInstance instance)
+        {
+            if (instance is IValueEntry valueEntry)
+                base.Add(valueEntry);
+            else
+                (_setters ??= new()).Add(instance);
+        }
+
         public override void SetOwner(ValueStore? owner) => ValueStore = owner;
 
         void IStyleActivatorSink.OnNext(bool value, int tag)
