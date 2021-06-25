@@ -59,8 +59,10 @@ namespace Avalonia.Styling
 
         void IObserver<object?>.OnNext(object? value)
         {
+            if (value == BindingOperations.DoNothing)
+                return;
             var oldValue = _value;
-            _value = value;
+            _value = BindingNotification.ExtractValue(value);
             _owner.ValueStore?.ValueChanged(_owner, this, oldValue);
         }
 

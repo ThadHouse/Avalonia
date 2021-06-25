@@ -730,31 +730,42 @@ namespace Avalonia
             BindingPriority priority,
             bool isEffectiveValue)
         {
-            var e = AvaloniaPropertyChangedEventArgsPool<T>.Get(
-                this,
-                property,
-                oldValue,
-                newValue,
-                priority,
-                isEffectiveValue);
+            if (isEffectiveValue)
+                property.Notifying?.Invoke(this, true);
 
-            OnPropertyChangedCore(e);
-
-            if (e.IsEffectiveValueChange &&
-                _observables is object &&
-                _observables.TryGetValue(property, out var o))
+            try
             {
-                var value = e.NewValue.Value;
+                var e = AvaloniaPropertyChangedEventArgsPool<T>.Get(
+                    this,
+                    property,
+                    oldValue,
+                    newValue,
+                    priority,
+                    isEffectiveValue);
 
-                // Release the event args here so they can be recycled if raising the change on the
-                // observable causes a cascading change.
-                AvaloniaPropertyChangedEventArgsPool<T>.Release(e);
+                OnPropertyChangedCore(e);
 
-                ((AvaloniaPropertyObservable<T?>)o).PublishNext(value);
+                if (e.IsEffectiveValueChange &&
+                    _observables is object &&
+                    _observables.TryGetValue(property, out var o))
+                {
+                    var value = e.NewValue.Value;
+
+                    // Release the event args here so they can be recycled if raising the change on the
+                    // observable causes a cascading change.
+                    AvaloniaPropertyChangedEventArgsPool<T>.Release(e);
+
+                    ((AvaloniaPropertyObservable<T?>)o).PublishNext(value);
+                }
+                else
+                {
+                    AvaloniaPropertyChangedEventArgsPool<T>.Release(e);
+                }
             }
-            else
+            finally
             {
-                AvaloniaPropertyChangedEventArgsPool<T>.Release(e);
+                if (isEffectiveValue)
+                    property.Notifying?.Invoke(this, false);
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Avalonia.Data;
+using Avalonia.Logging;
 
 #nullable enable
 
@@ -122,12 +123,13 @@ namespace Avalonia.PropertyStore
 
         void IObserver<BindingValue<T>>.OnNext(BindingValue<T> value)
         {
+            if (value.Error is object)
+                _owner.ValueStore.Owner.LogBindingError(Property, value.Error);
             if (value.HasValue)
                 SetValue(value.Value);
             else if (value.Type == BindingValueType.BindingError)
                 ClearValue();
         }
-
 
         private void BindingCompleted()
         {

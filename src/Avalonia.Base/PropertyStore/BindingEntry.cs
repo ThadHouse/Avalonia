@@ -9,12 +9,7 @@ using Avalonia.Utilities;
 
 namespace Avalonia.PropertyStore
 {
-    internal interface IBindingEntry : IValueEntry, IValueFrame, IDisposable
-    {
-    }
-
     internal class BindingEntry<T> : IValueEntry<T>,
-        IBindingEntry,
         IValueFrame, 
         IObserver<BindingValue<T>>,
         IObserver<object?>,
@@ -167,10 +162,16 @@ namespace Avalonia.PropertyStore
 
         private void SetValue(object? value)
         {
+            if (value == BindingOperations.DoNothing)
+                return;
             if (value == AvaloniaProperty.UnsetValue)
                 ClearValue();
-            else if (value != BindingOperations.DoNothing)
-                SetValue((T?)value);
+            else
+            {
+                value = BindingNotification.ExtractValue(value);
+                if (value is T typed)
+                    SetValue(typed);
+            }
         }
 
         private void StartIfNecessary()
