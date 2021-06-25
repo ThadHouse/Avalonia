@@ -212,13 +212,13 @@ namespace Avalonia
             bool isEffectiveValueChange)
         {
             var o = oldValue != UnsetValue ? new Optional<TValue>((TValue?)oldValue) : default;
-            var n = newValue != UnsetValue ? new BindingValue<TValue>((TValue?)newValue) : default;
+            var n = BindingValue<TValue>.FromUntyped(newValue);
             owner.RaisePropertyChanged(this, o, n, priority, isEffectiveValueChange);
         }
 
-        internal override void SetValue(AvaloniaObject target, object value)
+        internal override void SetValue(AvaloniaObject target, object? value)
         {
-            target.SetValue<TValue>(this, (TValue)value);
+            target.SetValue<TValue>(this, (TValue?)value);
         }
 
         private object? GetDefaultBoxedValue(Type type)

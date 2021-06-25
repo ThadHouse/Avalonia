@@ -62,6 +62,8 @@ namespace Avalonia.Styling
         bool IValueEntry.HasValue => true;
         AvaloniaProperty IValueEntry.Property => EnsureProperty();
 
+        public override string ToString() => $"Setter: {Property} = {Value}";
+
         ISetterInstance ISetter.Instance(IStyleInstance instance, IStyleable target)
         {
             if (Property is null)

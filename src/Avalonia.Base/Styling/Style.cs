@@ -98,7 +98,7 @@ namespace Avalonia.Styling
         internal IValueFrame? Instance(IStyleable target, IStyleHost? host)
         {
             var match = Selector is object ?
-                Selector.Evaluate(target, true) :
+                Selector.Match(target, true) :
                 target == host ? SelectorMatch.AlwaysThisInstance : SelectorMatch.NeverThisInstance;
 
             if (match.IsMatch != true)
