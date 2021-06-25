@@ -459,9 +459,9 @@ namespace Avalonia
             }
         }
 
-        void IStyleable.ApplyStyle(Style style)
+        void IStyleable.ApplyStyle(Style style, IStyleHost? host)
         {
-            if (style.Instance(this) is IValueFrame frame)
+            if (style.Instance(this, host) is IValueFrame frame)
                 GetValueStore().ApplyStyle(frame);
         }
 

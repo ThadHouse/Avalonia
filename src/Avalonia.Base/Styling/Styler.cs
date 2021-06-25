@@ -29,21 +29,21 @@ namespace Avalonia.Styling
             if (host.IsStylesInitialized)
             {
                 foreach (var style in host.Styles)
-                    ApplyStyle(target, style);
+                    ApplyStyle(target, style, host);
             }
         }
 
-        private void ApplyStyle(IStyleable target, IStyle style)
+        private void ApplyStyle(IStyleable target, IStyle style, IStyleHost host)
         {
             if (style is Style s)
             {
-                target.ApplyStyle(s);
+                target.ApplyStyle(s, host);
             }
             else if (style is IEnumerable<IStyle> styles)
             {
                 foreach (var child in styles)
                 {
-                    ApplyStyle(target, child);
+                    ApplyStyle(target, child, host);
                 }
             }
         }

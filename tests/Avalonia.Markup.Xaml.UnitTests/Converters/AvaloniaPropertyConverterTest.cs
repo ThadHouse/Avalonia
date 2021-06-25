@@ -137,7 +137,7 @@ namespace Avalonia.Markup.Xaml.UnitTests.Converters
                 get { throw new NotImplementedException(); }
             }
 
-            public void ApplyStyle(Style style)
+            public void ApplyStyle(Style style, IStyleHost host = null)
             {
                 throw new NotImplementedException();
             }

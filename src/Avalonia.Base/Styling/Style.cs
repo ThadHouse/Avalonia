@@ -95,18 +95,20 @@ namespace Avalonia.Styling
 
         public event EventHandler? OwnerChanged;
 
-        internal IValueFrame? Instance(IStyleable target)
+        internal IValueFrame? Instance(IStyleable target, IStyleHost? host)
         {
-            var match = Selector?.Evaluate(target, true);
+            var match = Selector is object ?
+                Selector.Evaluate(target, true) :
+                target == host ? SelectorMatch.AlwaysThisInstance : SelectorMatch.NeverThisInstance;
 
-            if (match?.IsMatch != true)
+            if (match.IsMatch != true)
                 return null;
 
             if (_sharedInstance is object)
                 return _sharedInstance;
 
-            var instance = new StyleInstance(this, match.Value.Activator);
-            var canShareInstance = match.Value.Activator is null;
+            var instance = new StyleInstance(this, match.Activator);
+            var canShareInstance = match.Activator is null;
 
             if (_setters is object)
             {

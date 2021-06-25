@@ -64,7 +64,7 @@ namespace Avalonia.Base.UnitTests.Styling
 
             var target = new Class1();
 
-            ((IStyleable)target).ApplyStyle(style);
+            ((IStyleable)target).ApplyStyle(style, target);
 
             Assert.Equal("Foo", target.Foo);
         }
@@ -83,7 +83,7 @@ namespace Avalonia.Base.UnitTests.Styling
             var target = new Class1();
             var other = new Class1();
 
-            ((IStyleable)target).ApplyStyle(style);
+            ((IStyleable)target).ApplyStyle(style, other);
 
             Assert.Equal("foodefault", target.Foo);
         }
