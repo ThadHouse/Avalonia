@@ -30,6 +30,8 @@ namespace Avalonia.Styling
             Source = style;
         }
 
+        public bool HasActivator => _activator is object;
+
         public override bool IsActive
         {
             get

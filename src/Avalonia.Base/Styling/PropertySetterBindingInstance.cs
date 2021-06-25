@@ -64,6 +64,16 @@ namespace Avalonia.Styling
             _owner.ValueStore?.ValueChanged(_owner, this, oldValue);
         }
 
+        void ISetterInstance.Activate(IStyleable target)
+        {
+            // No implementation needed here: this method is only needed by non-IValueEntry setter instances.
+        }
+
+        void ISetterInstance.Dectivate(IStyleable target)
+        {
+            // No implementation needed here: this method is only needed by non-IValueEntry setter instances.
+        }
+
         private void StartIfNecessary()
         {
             if (_instancedBinding is null)

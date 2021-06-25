@@ -63,22 +63,28 @@ namespace Avalonia.Styling
 
         ISetterInstance ISetter.Instance(IStyleInstance instance, IStyleable target)
         {
-            _ = Property ?? throw new InvalidOperationException("Setter.Property must be set.");
-
-            if (Value is IBinding binding)
-            {
+            if (Property is null)
+                throw new InvalidOperationException("Setter.Property must be set.");
+            else if (Value is IBinding binding)
                 return new PropertySetterBindingInstance((StyleInstance)instance, Property, binding);
-            }
             else if (Value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(Property.PropertyType))
-            {
                 return new PropertySetterTemplateInstance(Property, template);
-            }
+            else if (!Property.IsValidValue(Value))
+                throw new InvalidCastException($"Setter value '{Value}' is not a valid value for property '{Property}'.");
+            else if (Property.IsDirect)
+                return new DirectPropertySetterInstance(this);
             else
-            {
-                if (!Property.IsValidValue(Value))
-                    throw new InvalidCastException($"Setter value '{Value}' is not a valid value for property '{Property}'.");
                 return this;
-            }
+        }
+
+        void ISetterInstance.Activate(IStyleable target)
+        {
+            // No implementation needed here: this method is only needed by non-IValueEntry setter instances.
+        }
+
+        void ISetterInstance.Dectivate(IStyleable target)
+        {
+            // No implementation needed here: this method is only needed by non-IValueEntry setter instances.
         }
 
         bool IValueEntry.TryGetValue(out object? value)
