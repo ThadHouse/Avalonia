@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.UnitTests;
 using Moq;
@@ -322,24 +323,30 @@ namespace Avalonia.Base.UnitTests.Styling
             }
         }
 
-        ////[Fact]
-        ////public void StyleInstance_Is_Disposed_When_Control_Removed_From_Logical_Tree()
-        ////{
-        ////    using (AvaloniaLocator.EnterScope())
-        ////    {
-        ////        var root = new TestRoot();
-        ////        var child = new Border();
+        [Fact]
+        public void Style_Is_Removed_When_Control_Removed_From_Logical_Tree()
+        {
+            var app = UnitTestApplication.Start(TestServices.RealStyler);
+            var target = new Border();
+            var root = new TestRoot
+            {
+                Styles =
+                {
+                    new Style(x => x.OfType<Border>())
+                    {
+                        Setters =
+                        {
+                            new Setter(Border.BackgroundProperty, Brushes.Red),
+                        }
+                    }
+                },
+                Child = target,
+            };
 
-        ////        root.Child = child;
-
-        ////        var styleInstance = new Mock<IStyleInstance>();
-        ////        ((IStyleable)child).StyleApplied(styleInstance.Object);
-
-        ////        root.Child = null;
-
-        ////        styleInstance.Verify(x => x.Dispose(), Times.Once);
-        ////    }
-        ////}
+            Assert.Equal(Brushes.Red, target.Background);
+            root.Child = null;
+            Assert.Null(target.Background);
+        }
 
         [Fact]
         public void EndInit_Should_Raise_Initialized()
