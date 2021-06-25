@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using Avalonia.Data;
 using Avalonia.Logging;
 
@@ -38,6 +39,7 @@ namespace Avalonia.PropertyStore
         public IDisposable AddBinding(IObservable<BindingValue<T>> source)
         {
             _bindingSubscription?.Dispose();
+            _bindingSubscription = Disposable.Empty;
             _bindingSubscription = source.Subscribe(this);
             return this;
         }
@@ -46,6 +48,7 @@ namespace Avalonia.PropertyStore
         {
             _shim ??= new TypedObserverShim(this);
             _bindingSubscription?.Dispose();
+            _bindingSubscription = Disposable.Empty;
             _bindingSubscription = source.Subscribe(_shim);
             return this;
         }
@@ -53,6 +56,7 @@ namespace Avalonia.PropertyStore
         public IDisposable AddBinding(IObservable<object?> source)
         {
             _bindingSubscription?.Dispose();
+            _bindingSubscription = Disposable.Empty;
             _bindingSubscription = source.Subscribe(this);
             return this;
         }
