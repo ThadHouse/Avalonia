@@ -101,7 +101,12 @@ namespace Avalonia.PropertyStore
 
         public void SetValue(object? value)
         {
-            value = BindingNotification.ExtractValue(value);
+            if (value is BindingNotification notification)
+            {
+                if (notification.Error is object)
+                    _owner.ValueStore.Owner.LogBindingError(Property, notification.Error);
+                value = BindingNotification.ExtractValue(value);
+            }
 
             if (value == AvaloniaProperty.UnsetValue)
                 ClearValue();
