@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
+using Avalonia.Styling;
 
 namespace Avalonia.Controls.Generators
 {
@@ -182,11 +183,23 @@ namespace Avalonia.Controls.Generators
         /// <returns>The created container control.</returns>
         protected virtual IControl CreateContainer(object item)
         {
-            return item as IControl ?? new ContentPresenter
+            var result = item as IControl;
+
+            if (result == null)
             {
-                Content = item,
-                ContentTemplate = ItemTemplate,
-            };
+                result = new ContentPresenter();
+                result.SetValue(ContentPresenter.ContentProperty, item, BindingPriority.Style);
+
+                if (ItemTemplate != null)
+                {
+                    result.SetValue(
+                        ContentPresenter.ContentTemplateProperty,
+                        ItemTemplate,
+                        BindingPriority.TemplatedParent);
+                }
+            }
+
+            return result;
         }
 
         /// <summary>

@@ -216,11 +216,10 @@ namespace Avalonia
             throw new NotSupportedException("Target is not an AvaloniaObject.");
         }
 
-        [Obsolete("Use AvaloniaObject.SetValue without a priority")]
         public static IDisposable? SetValue(
             this IAvaloniaObject o,
             AvaloniaProperty property,
-            object value,
+            object? value,
             BindingPriority priority)
         {
             if (priority == BindingPriority.LocalValue)
