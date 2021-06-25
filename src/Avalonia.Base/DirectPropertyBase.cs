@@ -151,10 +151,17 @@ namespace Avalonia
 
         internal override void SetValue(AvaloniaObject target, object? value)
         {
-            if (value == UnsetValue)
+            if (value == BindingOperations.DoNothing)
+                return;
+            else if (value == UnsetValue)
                 target.ClearValue(this);
-            else if (value != BindingOperations.DoNothing)
-                target.SetValue<TValue?>(this, (TValue?)value);
+            else if (TypeUtilities.TryConvertImplicit(PropertyType, value, out var converted))
+                target.SetValue<TValue>(this, (TValue?)converted);
+            else
+            {
+                var type = value?.GetType().FullName ?? "(null)";
+                throw new ArgumentException($"Invalid value for Property '{Name}': '{value}' ({type})");
+            }
         }
     }
 }
