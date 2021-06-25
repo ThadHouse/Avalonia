@@ -75,7 +75,7 @@ namespace Avalonia.Styling
                     $"Cannot set direct property '{Property}' in '{instance.Source}' because the style has an activator.");
 
             if (Value is IBinding binding)
-                return SetBinding(instance, ao, binding);
+                return SetBinding((StyleInstance)instance, ao, binding);
             else if (Value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(Property.PropertyType))
                 return new PropertySetterTemplateInstance(Property, template);
             else if (!Property.IsValidValue(Value))
@@ -97,12 +97,12 @@ namespace Avalonia.Styling
             return Property ?? throw new InvalidOperationException("Setter.Property must be set.");
         }
 
-        private ISetterInstance SetBinding(IStyleInstance instance, AvaloniaObject target, IBinding binding)
+        private ISetterInstance SetBinding(StyleInstance instance, AvaloniaObject target, IBinding binding)
         {
             if (!Property!.IsDirect)
             {
                 var i = binding.Initiate(target, Property);
-                return new PropertySetterBindingInstance(target, Property, i.Observable);
+                return new PropertySetterBindingInstance(instance, Property, i.Observable);
             }
             else
             {

@@ -8,17 +8,25 @@ namespace Avalonia.Styling
 {
     internal class PropertySetterBindingInstance : BindingValueEntryBase, ISetterInstance
     {
-        private readonly AvaloniaObject _target;
+        private readonly StyleInstance _instance;
 
         public PropertySetterBindingInstance(
-            AvaloniaObject target,
+            StyleInstance instance,
             AvaloniaProperty property, 
             IObservable<object?> source)
             : base(property, source)
         {
-            _target = target;
+            _instance = instance;
         }
 
-        protected override Type GetOwnerType() => _target.GetType();
+        protected override Type GetOwnerType()
+        {
+            return _instance.ValueStore!.Owner.GetType();
+        }
+
+        protected override void ValueChanged(object? oldValue)
+        {
+            _instance.ValueStore!.ValueChanged(_instance, this, oldValue);
+        }
     }
 }

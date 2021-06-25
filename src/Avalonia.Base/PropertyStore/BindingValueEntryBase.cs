@@ -50,6 +50,7 @@ namespace Avalonia.PropertyStore
         void IObserver<object?>.OnNext(object? value) => SetValue(value);
 
         protected abstract Type GetOwnerType();
+        protected abstract void ValueChanged(object? oldValue);
 
         private void SetValue(object? value)
         {
@@ -61,7 +62,19 @@ namespace Avalonia.PropertyStore
             if (!accessor.ValidateValue(value))
                 value = accessor.GetDefaultValue(GetOwnerType());
 
-            _value = BindingNotification.ExtractValue(value);
+            value = BindingNotification.ExtractValue(value);
+
+            if (!Equals(_value, value))
+            {
+                var oldValue = _value;
+                _value = value;
+
+                // Only raise a property changed notifcation if we're not currently in the process of
+                // starting the binding (in this case the value will be read immediately afterwards
+                // and a notification raised).
+                if (_bindingSubscription != Disposable.Empty)
+                    ValueChanged(oldValue);
+            }
         }
 
         private void StartIfNecessary()

@@ -9,6 +9,8 @@ using Avalonia.Styling;
 using Moq;
 using Xunit;
 
+#nullable enable
+
 namespace Avalonia.Base.UnitTests.Styling
 {
     public class SetterTests
