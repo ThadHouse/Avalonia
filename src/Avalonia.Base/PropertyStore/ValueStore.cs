@@ -61,7 +61,7 @@ namespace Avalonia.PropertyStore
                 var entry = new BindingEntry<T>(property, source, priority);
                 AddFrame(entry);
 
-                if (priority < effectiveValue.Priority)
+                if (priority <= effectiveValue.Priority)
                 {
                     var oldValue = effectiveValue.Entry is object ?
                         effectiveValue.GetValue<T>() :
@@ -100,7 +100,7 @@ namespace Avalonia.PropertyStore
                 var entry = new BindingEntry<T>(property, source, priority);
                 AddFrame(entry);
 
-                if (priority < effectiveValue.Priority)
+                if (priority <= effectiveValue.Priority)
                 {
                     var oldValue = effectiveValue.Entry is object ?
                         effectiveValue.GetValue<T>() :
@@ -139,7 +139,7 @@ namespace Avalonia.PropertyStore
                 var entry = new BindingEntry(property, source, priority);
                 AddFrame(entry);
 
-                if (priority < effectiveValue.Priority)
+                if (priority <= effectiveValue.Priority)
                 {
                     var oldValue = effectiveValue.Entry is object ?
                         effectiveValue.GetValue() :
