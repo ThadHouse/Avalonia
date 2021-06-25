@@ -639,10 +639,6 @@ namespace Avalonia
         {
         }
 
-        private protected void ApplyStyle(IValueFrame frame) => _values.ApplyStyle(frame);
-        private protected void BeginStyling() => _values.BeginStyling();
-        private protected void EndStyling() => _values.EndStyling();
-
         /// <summary>
         /// Called when a avalonia property changes on the object.
         /// </summary>

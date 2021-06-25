@@ -9,7 +9,7 @@ namespace Avalonia.PropertyStore
 {
     internal class ValueStore
     {
-        private int _applyingStyles;
+        private int _styling;
         private readonly List<IValueFrame> _frames = new();
         private InheritanceFrame? _inheritanceFrame;
         private LocalValueFrame? _localValues;
@@ -22,19 +22,19 @@ namespace Avalonia.PropertyStore
         public IReadOnlyList<IValueFrame> Frames => _frames;
         public InheritanceFrame? InheritanceFrame => _inheritanceFrame;
 
-        public void BeginStyling() => ++_applyingStyles;
+        public void BeginStyling() => ++_styling;
 
         public void ApplyStyle(IValueFrame style)
         {
             AddFrame(style);
 
-            if (_applyingStyles == 0)
+            if (_styling == 0)
                 ReevaluateEffectiveValues();
         }
 
         public void EndStyling()
         {
-            if (--_applyingStyles == 0)
+            if (--_styling == 0)
                 ReevaluateEffectiveValues();
         }
 
@@ -337,6 +337,13 @@ namespace Avalonia.PropertyStore
         {
             _frames.Remove(entry);
             ReevaluateEffectiveValue(entry.Property, oldValue);
+        }
+
+        public void RemoveFrame(IValueFrame frame)
+        {
+            _frames.Remove(frame);
+            if (_styling == 0)
+                ReevaluateEffectiveValues();
         }
 
         private void AddFrame(IValueFrame frame)

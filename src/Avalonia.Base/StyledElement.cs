@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using Avalonia.Animation;
 using Avalonia.Collections;
 using Avalonia.Controls;
@@ -339,9 +340,9 @@ namespace Avalonia
 
                 if (styler is object)
                 {
-                    BeginStyling();
+                    GetValueStore().BeginStyling();
                     try { styler.ApplyStyles(this); }
-                    finally{ EndStyling(); }
+                    finally{ GetValueStore().EndStyling(); }
                 }
 
                 _styled = true;
@@ -495,9 +496,8 @@ namespace Avalonia
 
         void IStyleHost.StylesRemoved(IReadOnlyList<IStyle> styles)
         {
-            throw new NotImplementedException();
-            //var allStyles = RecurseStyles(styles);
-            //DetachStylesFromThisAndDescendents(allStyles);
+            var allStyles = RecurseStyles(styles);
+            DetachStylesFromThisAndDescendents(allStyles);
         }
 
         protected virtual void LogicalChildrenCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -758,29 +758,23 @@ namespace Avalonia
             }
         }
 
-        private void DetachStyles()
+        private void DetachStyles(IReadOnlyList<Style>? styles = null)
         {
-            ////throw new NotImplementedException();
-            ////if (_appliedStyles is object)
-            ////{
-            ////    BeginBatchUpdate();
+            var valueStore = GetValueStore();
 
-            ////    try
-            ////    {
-            ////        foreach (var i in _appliedStyles)
-            ////        {
-            ////            i.Dispose();
-            ////        }
+            valueStore.BeginStyling();
 
-            ////        _appliedStyles.Clear();
-            ////    }
-            ////    finally
-            ////    {
-            ////        EndBatchUpdate();
-            ////    }
-            ////}
+            for (var i = valueStore.Frames.Count - 1; i >= 0; --i)
+            {
+                if (valueStore.Frames[i] is StyleInstance si &&
+                    (styles is null || styles.Contains(si.Source)))
+                {
+                    valueStore.RemoveFrame(si);
+                }
+            }
 
-            ////_styled = false;
+            valueStore.EndStyling();
+            _styled = false;
         }
 
         private void InvalidateStylesOnThisAndDescendents()
@@ -794,6 +788,21 @@ namespace Avalonia
                 for (var i = 0; i < childCount; ++i)
                 {
                     (_logicalChildren[i] as StyledElement)?.InvalidateStylesOnThisAndDescendents();
+                }
+            }
+        }
+
+        private void DetachStylesFromThisAndDescendents(IReadOnlyList<Style> styles)
+        {
+            DetachStyles(styles);
+
+            if (_logicalChildren is object)
+            {
+                var childCount = _logicalChildren.Count;
+
+                for (var i = 0; i < childCount; ++i)
+                {
+                    (_logicalChildren[i] as StyledElement)?.DetachStylesFromThisAndDescendents(styles);
                 }
             }
         }
@@ -812,6 +821,24 @@ namespace Avalonia
             {
                 e ??= ResourcesChangedEventArgs.Empty;
                 NotifyChildResourcesChanged(e);
+            }
+        }
+
+        private static IReadOnlyList<Style> RecurseStyles(IReadOnlyList<IStyle> styles)
+        {
+            var result = new List<Style>();
+            RecurseStyles(styles, result);
+            return result;
+        }
+
+        private static void RecurseStyles(IEnumerable<IStyle> styles, List<Style> result)
+        {
+            foreach (var i in styles)
+            {
+                if (i is Style style)
+                    result.Add(style);
+                else if (i is IEnumerable<IStyle> children)
+                    RecurseStyles(children, result);
             }
         }
     }
