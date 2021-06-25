@@ -51,6 +51,7 @@ namespace Avalonia.PropertyStore
 
         protected abstract Type GetOwnerType();
         protected abstract void ValueChanged(object? oldValue);
+        protected abstract void Completed(object? oldValue);
 
         private void SetValue(object? value)
         {
@@ -94,7 +95,8 @@ namespace Avalonia.PropertyStore
         private void BindingCompleted()
         {
             _bindingSubscription = null;
-            SetValue(AvaloniaProperty.UnsetValue);
+            _value = AvaloniaProperty.UnsetValue;
+            Completed(_value);
         }
     }
 }

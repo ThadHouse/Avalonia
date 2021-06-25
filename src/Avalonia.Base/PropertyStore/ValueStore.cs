@@ -333,6 +333,12 @@ namespace Avalonia.PropertyStore
             ReevaluateEffectiveValue(entry.Property, oldValue);
         }
 
+        public void RemoveBindingEntry(BindingEntry entry, object? oldValue)
+        {
+            _frames.Remove(entry);
+            ReevaluateEffectiveValue(entry.Property, oldValue);
+        }
+
         private void AddFrame(IValueFrame frame)
         {
             var index = _frames.BinarySearch(frame, FrameInsertionComparer.Instance);

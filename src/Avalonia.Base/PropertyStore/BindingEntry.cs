@@ -36,6 +36,7 @@ namespace Avalonia.PropertyStore
 
         public void SetOwner(ValueStore? owner) => _owner = owner;
         protected override void ValueChanged(object? oldValue) => _owner!.ValueChanged(this, this, oldValue);
+        protected override void Completed(object? oldValue) => _owner!.RemoveBindingEntry(this, oldValue);
 
         int IList<IValueEntry>.IndexOf(IValueEntry item) => throw new NotImplementedException();
         void IList<IValueEntry>.Insert(int index, IValueEntry item) => throw new NotImplementedException();

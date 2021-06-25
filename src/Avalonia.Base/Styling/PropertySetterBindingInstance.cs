@@ -28,5 +28,7 @@ namespace Avalonia.Styling
         {
             _instance.ValueStore!.ValueChanged(_instance, this, oldValue);
         }
+
+        protected override void Completed(object? oldValue) => ValueChanged(oldValue);
     }
 }
