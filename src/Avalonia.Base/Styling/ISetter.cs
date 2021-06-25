@@ -1,4 +1,6 @@
-﻿namespace Avalonia.Styling
+﻿#nullable enable
+
+namespace Avalonia.Styling
 {
     public interface ISetter
     {

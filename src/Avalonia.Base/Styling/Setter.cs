@@ -66,13 +66,16 @@ namespace Avalonia.Styling
 
         ISetterInstance ISetter.Instance(IStyleInstance instance, IStyleable target)
         {
+            if (target is not AvaloniaObject ao)
+                throw new InvalidOperationException("Don't know how to instance a style on this type.");
             if (Property is null)
                 throw new InvalidOperationException("Setter.Property must be set.");
-            else if (Property.IsDirect && instance.HasActivator)
+            if (Property.IsDirect && instance.HasActivator)
                 throw new InvalidOperationException(
                     $"Cannot set direct property '{Property}' in '{instance.Source}' because the style has an activator.");
-            else if (Value is IBinding binding)
-                return SetBinding(instance, target, binding);
+
+            if (Value is IBinding binding)
+                return SetBinding(instance, ao, binding);
             else if (Value is ITemplate template && !typeof(ITemplate).IsAssignableFrom(Property.PropertyType))
                 return new PropertySetterTemplateInstance(Property, template);
             else if (!Property.IsValidValue(Value))
@@ -94,10 +97,13 @@ namespace Avalonia.Styling
             return Property ?? throw new InvalidOperationException("Setter.Property must be set.");
         }
 
-        private ISetterInstance SetBinding(IStyleInstance instance, IStyleable target, IBinding binding)
+        private ISetterInstance SetBinding(IStyleInstance instance, AvaloniaObject target, IBinding binding)
         {
             if (!Property!.IsDirect)
-                return new PropertySetterBindingInstance((StyleInstance)instance, Property, binding);
+            {
+                var i = binding.Initiate(target, Property);
+                return new PropertySetterBindingInstance(target, Property, i.Observable);
+            }
             else
             {
                 target.Bind(Property, binding);

@@ -1,78 +1,24 @@
 ﻿using System;
 using Avalonia.Data;
-using Avalonia.Logging;
 using Avalonia.PropertyStore;
 
 #nullable enable
 
 namespace Avalonia.Styling
 {
-    internal class PropertySetterBindingInstance : IValueEntry, ISetterInstance, IObserver<object?>
+    internal class PropertySetterBindingInstance : BindingValueEntryBase, ISetterInstance
     {
-        private static readonly object s_finished = new object();
-        private readonly StyleInstance _owner;
-        private readonly IBinding _binding;
-        private InstancedBinding? _instancedBinding;
-        private object? _value = AvaloniaProperty.UnsetValue;
+        private readonly AvaloniaObject _target;
 
-        public PropertySetterBindingInstance(StyleInstance owner, AvaloniaProperty property, IBinding binding)
+        public PropertySetterBindingInstance(
+            AvaloniaObject target,
+            AvaloniaProperty property, 
+            IObservable<object?> source)
+            : base(property, source)
         {
-            _owner = owner;
-            _binding = binding;
-            Property = property;
+            _target = target;
         }
 
-        public bool HasValue
-        {
-            get
-            {
-                StartIfNecessary();
-                return _value != AvaloniaProperty.UnsetValue;
-            }
-        }
-
-        public AvaloniaProperty Property { get; }
-
-        public bool TryGetValue(out object? value)
-        {
-            if (_owner.ValueStore is null)
-                throw new InvalidOperationException("Cannot get value from unowned BindingValue.");
-
-            if (_value == s_finished)
-            {
-                value = default;
-                return false;
-            }
-
-            StartIfNecessary();
-            value = _value;
-            return value != AvaloniaProperty.UnsetValue;
-        }
-
-        void IObserver<object?>.OnCompleted() => _value = s_finished;
-
-        void IObserver<object?>.OnError(Exception error)
-        {
-            Logger.TryGet(LogEventLevel.Error, LogArea.Property)?.Log(this, "Binding error {Error}", error);
-            _value = s_finished;
-        }
-
-        void IObserver<object?>.OnNext(object? value)
-        {
-            if (value == BindingOperations.DoNothing)
-                return;
-            var oldValue = _value;
-            _value = BindingNotification.ExtractValue(value);
-            _owner.ValueStore?.ValueChanged(_owner, this, oldValue);
-        }
-
-        private void StartIfNecessary()
-        {
-            if (_instancedBinding is null)
-            {
-                _instancedBinding = _binding.Initiate(_owner.ValueStore!.Owner, Property);
-                _instancedBinding.Observable.Subscribe(this);
-            }
-        }
+        protected override Type GetOwnerType() => _target.GetType();
     }
 }

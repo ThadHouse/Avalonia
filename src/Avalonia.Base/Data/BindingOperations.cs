@@ -49,29 +49,28 @@ namespace Avalonia.Data
                         target.Bind(property, binding.Subject, binding.Priority),
                         target.GetObservable(property).Subscribe(binding.Subject));
                 case BindingMode.OneTime:
-                    throw new NotImplementedException();
-                    ////var source = binding.Subject ?? binding.Observable;
+                    var source = binding.Subject ?? binding.Observable;
 
-                    ////if (source != null)
-                    ////{
-                    ////    // Perf: Avoid allocating closure in the outer scope.
-                    ////    var targetCopy = target;
-                    ////    var propertyCopy = property;
-                    ////    var bindingCopy = binding;
+                    if (source != null)
+                    {
+                        // Perf: Avoid allocating closure in the outer scope.
+                        var targetCopy = target;
+                        var propertyCopy = property;
+                        var bindingCopy = binding;
 
-                    ////    return source
-                    ////        .Where(x => BindingNotification.ExtractValue(x) != AvaloniaProperty.UnsetValue)
-                    ////        .Take(1)
-                    ////        .Subscribe(x => targetCopy.SetValue(
-                    ////            propertyCopy,
-                    ////            BindingNotification.ExtractValue(x),
-                    ////            bindingCopy.Priority));
-                    ////}
-                    ////else
-                    ////{
-                    ////    target.SetValue(property, binding.Value, binding.Priority);
-                    ////    return Disposable.Empty;
-                    ////}
+                        return source
+                            .Where(x => BindingNotification.ExtractValue(x) != AvaloniaProperty.UnsetValue)
+                            .Take(1)
+                            .Subscribe(x => targetCopy.SetValue(
+                                propertyCopy,
+                                BindingNotification.ExtractValue(x),
+                                bindingCopy.Priority));
+                    }
+                    else
+                    {
+                        target.SetValue(property, binding.Value, binding.Priority);
+                        return Disposable.Empty;
+                    }
 
                 case BindingMode.OneWayToSource:
                 {
