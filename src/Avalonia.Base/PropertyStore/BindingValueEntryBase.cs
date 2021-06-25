@@ -57,12 +57,15 @@ namespace Avalonia.PropertyStore
             if (value == BindingOperations.DoNothing)
                 return;
 
-            var accessor = (IStyledPropertyAccessor)Property;
+            if (value != AvaloniaProperty.UnsetValue)
+            {
+                var accessor = (IStyledPropertyAccessor)Property;
 
-            if (!accessor.ValidateValue(value))
-                value = accessor.GetDefaultValue(GetOwnerType());
+                if (!accessor.ValidateValue(value))
+                    value = accessor.GetDefaultValue(GetOwnerType());
 
-            value = BindingNotification.ExtractValue(value);
+                value = BindingNotification.ExtractValue(value);
+            }
 
             if (!Equals(_value, value))
             {
