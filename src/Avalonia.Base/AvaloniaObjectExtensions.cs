@@ -166,6 +166,56 @@ namespace Avalonia
             return o.GetValueByPriority(property, BindingPriority.Style, maxPriority);
         }
 
+        /// <summary>
+        /// Gets a subject for a <see cref="AvaloniaProperty"/>.
+        /// </summary>
+        /// <param name="o">The object.</param>
+        /// <param name="property">The property.</param>
+        /// <param name="priority">
+        /// The priority with which binding values are written to the object.
+        /// </param>
+        /// <returns>
+        /// An <see cref="ISubject{Object}"/> which can be used for two-way binding to/from the 
+        /// property.
+        /// </returns>
+        public static ISubject<object?> GetSubject(
+            this IAvaloniaObject o,
+            AvaloniaProperty property,
+            BindingPriority priority = BindingPriority.LocalValue)
+        {
+            return Subject.Create<object?>(
+                Observer.Create<object?>(x => o.SetValue(property, x, priority)),
+                o.GetObservable(property));
+        }
+
+        /// <summary>
+        /// Gets a subject for a <see cref="AvaloniaProperty"/>.
+        /// </summary>
+        /// <typeparam name="T">The property type.</typeparam>
+        /// <param name="o">The object.</param>
+        /// <param name="property">The property.</param>
+        /// <param name="priority">
+        /// The priority with which binding values are written to the object.
+        /// </param>
+        /// <returns>
+        /// An <see cref="ISubject{T}"/> which can be used for two-way binding to/from the 
+        /// property.
+        /// </returns>
+        public static ISubject<T?> GetSubject<T>(
+            this IAvaloniaObject o,
+            AvaloniaProperty<T?> property,
+            BindingPriority priority = BindingPriority.LocalValue)
+        {
+            if (o is AvaloniaObject ao)
+            {
+                return Subject.Create<T?>(
+                    Observer.Create<T?>(x => ao.SetValue(property, x, priority)),
+                    ao.GetObservable(property));
+            }
+
+            throw new NotSupportedException("Target is not an AvaloniaObject.");
+        }
+
         [Obsolete("Use AvaloniaObject.SetValue without a priority")]
         public static IDisposable? SetValue(
             this IAvaloniaObject o,

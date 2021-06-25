@@ -310,7 +310,7 @@ namespace Avalonia.Base.UnitTests
                 bool enableDataValidation = false)
             {
                 ++InstanceCount;
-                return new InstancedBinding(this, BindingMode.OneWay, BindingPriority.LocalValue);
+                return InstancedBinding.OneWay(this, BindingPriority.LocalValue);
             }
 
             public void OnNext(object? value)

@@ -35,7 +35,7 @@ namespace Avalonia.Base.UnitTests
             object anchor = null,
             bool enableDataValidation = false)
         {
-            return new InstancedBinding(this, BindingMode.OneWay, BindingPriority.Style);
+            return InstancedBinding.OneWay(this, BindingPriority.Style);
         }
 
         protected void PublishError(Exception error)

@@ -355,10 +355,6 @@ namespace Avalonia
 
             LogPropertySet(property, value, BindingPriority.LocalValue);
             var p = AvaloniaPropertyRegistry.Instance.GetRegisteredDirect(this, property);
-
-            if (p is null)
-                throw new ArgumentException($"Property '{property.Name} not registered on '{GetType()}");
-
             SetDirectValueUnchecked(p, value);
         }
 

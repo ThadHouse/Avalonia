@@ -22,7 +22,7 @@
             object anchor = null,
             bool enableDataValidation = false)
         {
-            return new InstancedBinding(Source.GetObservable(Property), Mode, BindingPriority.LocalValue);
+            return new InstancedBinding(Source.GetSubject(Property), Mode, BindingPriority.LocalValue);
         }
     }
 }

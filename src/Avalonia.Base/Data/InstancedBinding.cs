@@ -26,7 +26,7 @@ namespace Avalonia.Data
         /// source which can be used for all binding modes. If you wish to create an instance with
         /// something other than a subject, use one of the static creation methods on this class.
         /// </remarks>
-        public InstancedBinding(IObservable<object> source, BindingMode mode, BindingPriority priority)
+        public InstancedBinding(ISubject<object> source, BindingMode mode, BindingPriority priority)
         {
             _ = source ?? throw new ArgumentNullException(nameof(source));
 
