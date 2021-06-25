@@ -136,7 +136,7 @@ namespace Avalonia.PropertyStore
             else
             {
                 var effectiveValue = GetEffectiveValue(property);
-                var entry = new BindingEntry<T>(property, source, priority);
+                var entry = new BindingEntry(property, source, priority);
                 AddFrame(entry);
 
                 if (priority < effectiveValue.Priority)

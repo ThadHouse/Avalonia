@@ -188,6 +188,13 @@ namespace Avalonia
         /// <inheritdoc/>
         object? IStyledPropertyAccessor.GetDefaultValue(Type type) => GetDefaultBoxedValue(type);
 
+        bool IStyledPropertyAccessor.ValidateValue(object? value)
+        {
+            if (value is TValue typed)
+                return ValidateValue?.Invoke(typed) ?? true;
+            return false;
+        }
+
         internal override IObservable<object?> GetObservable(AvaloniaObject target)
         {
             return (AvaloniaPropertyObservable)target.GetObservable(this);
