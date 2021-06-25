@@ -258,14 +258,11 @@ namespace Avalonia.Controls.Presenters
             var logicalChildren = Host?.LogicalChildren ?? LogicalChildren;
 
             // Remove the old child if we're not recycling it.
-            if (newChild != oldChild)
+            if (oldChild is object && newChild != oldChild)
             {
-
-                if (oldChild != null)
-                {
-                    VisualChildren.Remove(oldChild);
-                    logicalChildren.Remove(oldChild);
-                }
+                VisualChildren.Remove(oldChild);
+                logicalChildren.Remove(oldChild);
+                ((ISetInheritanceParent)oldChild).SetParent(oldChild.Parent as AvaloniaObject);
             }
 
             // Set the DataContext if the data isn't a control.
@@ -276,6 +273,7 @@ namespace Avalonia.Controls.Presenters
             else
             {
                 ClearValue(DataContextProperty);
+                newChild.ClearValue(DataContextProperty);
             }
 
             // Update the Child.
@@ -285,6 +283,7 @@ namespace Avalonia.Controls.Presenters
             }
             else if (newChild != oldChild)
             {
+                ((ISetInheritanceParent)newChild).SetParent(this);
                 Child = newChild;
 
                 if (!logicalChildren.Contains(newChild))

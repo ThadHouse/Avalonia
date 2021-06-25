@@ -25,7 +25,7 @@ namespace Avalonia
     /// - Implements <see cref="ILogical"/> to form part of a logical tree.
     /// - A collection of class strings for custom styling.
     /// </summary>
-    public class StyledElement : Animatable, IDataContextProvider, IStyledElement, ISetLogicalParent
+    public class StyledElement : Animatable, IDataContextProvider, IStyledElement, ISetLogicalParent, ISetInheritanceParent
     {
         /// <summary>
         /// Defines the <see cref="DataContext"/> property.
@@ -60,6 +60,7 @@ namespace Avalonia
         private int _initCount;
         private string? _name;
         private readonly Classes _classes = new Classes();
+        private AvaloniaObject? _inheritanceParent;
         private ILogicalRoot? _logicalRoot;
         private IAvaloniaList<ILogical>? _logicalChildren;
         private IResourceDictionary? _resources;
@@ -300,7 +301,7 @@ namespace Avalonia
         bool IStyleHost.IsStylesInitialized => _styles != null;
 
         /// <inheritdoc/>
-        IStyleHost? IStyleHost.StylingParent => (IStyleHost?)Parent;
+        IStyleHost? IStyleHost.StylingParent => Parent;
 
         /// <inheritdoc/>
         public virtual void BeginInit()
@@ -364,9 +365,20 @@ namespace Avalonia
             }
         }
 
-        protected internal override int GetInheritanceChildCount() => _logicalChildren?.Count ?? 0;
-        protected internal override AvaloniaObject GetInheritanceChild(int index) => (AvaloniaObject)_logicalChildren![index];
-        protected internal override AvaloniaObject? GetInheritanceParent() => Parent as AvaloniaObject;
+        protected internal override int GetInheritanceChildCount()
+        {
+            return _logicalChildren?.Count ?? 0;
+        }
+
+        protected internal override AvaloniaObject GetInheritanceChild(int index)
+        {
+            return (AvaloniaObject)_logicalChildren![index];
+        }
+
+        protected internal override AvaloniaObject? GetInheritanceParent()
+        {
+            return _inheritanceParent ?? Parent as AvaloniaObject;
+        }
 
         internal StyleDiagnostics GetStyleDiagnosticsInternal()
         {
@@ -457,6 +469,14 @@ namespace Avalonia
                     new BindingValue<IStyledElement?>(Parent),
                     BindingPriority.LocalValue);
             }
+        }
+
+        void ISetInheritanceParent.SetParent(AvaloniaObject? parent)
+        {
+            var oldParent = GetInheritanceParent();
+            _inheritanceParent = parent;
+            if (oldParent != GetInheritanceParent())
+                InheritanceParentChanged();
         }
 
         void IStyleable.ApplyStyle(Style style, IStyleHost? host)
