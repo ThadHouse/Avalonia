@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading;
@@ -170,8 +171,26 @@ namespace Avalonia.DesignerSupport.Remote
                 throw Die($"Assembly {args.AppPath} doesn't have an entry point");
             var builderMethod = entryPoint.DeclaringType.GetMethod(BuilderMethodName,
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
-            if (builderMethod == null)
-                throw Die($"{entryPoint.DeclaringType.FullName} doesn't have a method named {BuilderMethodName}");
+            if (builderMethod == null) {
+                var possibleEntryPoints = 
+                    asm.GetExportedTypes()
+                    .Where(x => x.GetCustomAttributes(false)
+                                 .Select(y => y.GetType().Name)
+                                 .Contains("AvaloniaEntryPointAttribute")
+                    ).ToArray();
+                if (possibleEntryPoints.Length == 0) {
+                    throw Die($"{entryPoint.DeclaringType.FullName} doesn't have a method named {BuilderMethodName} and AvaloniaEntryPointAttribute not found on any class");
+                } else if (possibleEntryPoints.Length > 1) {
+                    throw Die($"Too many classes attributed with AvaloniaEntryPointAttribute");
+                } else {
+                    builderMethod = possibleEntryPoints[0].GetMethod(BuilderMethodName,
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, Array.Empty<Type>(), null);
+                    if (builderMethod == null)
+                        throw Die($"{possibleEntryPoints[0].FullName} doesn't have a method named {BuilderMethodName}");
+                }
+
+            }
+
             Design.IsDesignMode = true;
             Log($"Obtaining AppBuilder instance from {builderMethod.DeclaringType.FullName}.{builderMethod.Name}");
             var appBuilder = builderMethod.Invoke(null, null);
