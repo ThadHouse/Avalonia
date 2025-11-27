@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Fonts.Inter;
 using Avalonia.Headless;
+using Avalonia.LinuxFramebuffer;
 using Avalonia.LinuxFramebuffer.Output;
 using Avalonia.LogicalTree;
 using Avalonia.Rendering.Composition;
@@ -21,6 +22,7 @@ namespace ControlCatalog.NetCore
     static class Program
     {
         private static bool s_useFramebuffer;
+        private static bool s_useDrm;
         
         [STAThread]
         static int Main(string[] args)
@@ -28,6 +30,10 @@ namespace ControlCatalog.NetCore
             if (args.Contains("--fbdev"))
             {
                 s_useFramebuffer = true;
+            }
+            if (args.Contains("--drm"))
+            {
+                s_useDrm = true;
             }
 
             if (args.Contains("--wait-for-attach"))
@@ -50,6 +56,21 @@ namespace ControlCatalog.NetCore
                     double.TryParse(args[idx + 1], NumberStyles.Any, CultureInfo.InvariantCulture, out var scaling))
                     return scaling;
                 return 1;
+            }
+            SurfaceOrientation GetOrientation()
+            {
+                var idx = Array.IndexOf(args, "--orientation");
+                if (idx != 0 && args.Length > idx + 1 &&
+                    Enum.TryParse<SurfaceOrientation>(args[idx + 1], true, out var orientation))
+                    return orientation;
+                return SurfaceOrientation.Rotation0;
+            }
+            string GetCard()
+            {
+                var idx = Array.IndexOf(args, "--card");
+                if (idx != 0 && args.Length > idx + 1)
+                    return args[idx + 1];
+                return null;
             }
             if (s_useFramebuffer)
             {
@@ -106,10 +127,14 @@ namespace ControlCatalog.NetCore
                     })
                     .StartWithClassicDesktopLifetime(args);
             }
-            else if (args.Contains("--drm"))
+            else if (s_useDrm)
             {
                 SilenceConsole();
-                return builder.StartLinuxDrm(args, scaling: GetScaling());
+                return builder.StartLinuxDrm(args, card: GetCard(), options: new DrmOutputOptions()
+                {
+                    Scaling = GetScaling(),
+                    Orientation = GetOrientation(),
+                });
             }
             else if (args.Contains("--dxgi"))
             {
@@ -151,7 +176,7 @@ namespace ControlCatalog.NetCore
                 .WithInterFont()
                 .AfterSetup(builder =>
                 {
-                    if (!s_useFramebuffer)
+                    if (!s_useFramebuffer && !s_useDrm)
                     {
                         builder.Instance!.AttachDevTools(new Avalonia.Diagnostics.DevToolsOptions()
                         {
@@ -170,7 +195,7 @@ namespace ControlCatalog.NetCore
         {
             new Thread(() =>
             {
-                Console.CursorVisible = false;
+                Console.CursorVisible = true;
                 while (true)
                     Console.ReadKey(true);
             })

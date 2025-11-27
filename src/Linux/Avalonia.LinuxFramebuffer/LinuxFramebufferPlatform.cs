@@ -142,7 +142,10 @@ namespace Avalonia.LinuxFramebuffer
         {
             get
             {
-                EnsureTopLevel();
+                if (_topLevel == null)
+                {
+                    EnsureTopLevel();
+                }
                 return _topLevel;
             }
         }
@@ -197,4 +200,3 @@ public static class LinuxFramebufferPlatformExtensions
         return lifetime.ExitCode;
     }
 }
-

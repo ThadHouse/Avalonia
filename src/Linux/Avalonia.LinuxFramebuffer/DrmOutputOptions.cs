@@ -13,6 +13,8 @@ namespace Avalonia.LinuxFramebuffer
         /// </summary>
         public double Scaling { get; set; } = 1.0;
         
+        public SurfaceOrientation Orientation { get; set; } = SurfaceOrientation.Rotation0;
+        
         /// <summary>
         /// If true an two cycle buffer swapping is processed at init.
         /// Default: True
